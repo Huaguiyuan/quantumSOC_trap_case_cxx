@@ -29,9 +29,9 @@ int main(int argc,char **args)
   PC             pc;               /* preconditioner context */
   PetscReal      norm,tol=1.e-11;  /* norm of solution error */
   PetscErrorCode ierr;
-  PetscInt       i,n = 10,col[3],its,rstart,rend,nlocal;
+  PetscInt       i,j,n = 6,col[3],its,rstart,rend,nlocal;
   PetscScalar    neg_one = -1.0,one = 1.0,value[3];
-
+//  PetscViewer    viewer;
   PetscInitialize(&argc,&args,(char*)0,help);
   ierr = PetscOptionsGetInt(NULL,"-n",&n,NULL);CHKERRQ(ierr);
 
@@ -58,7 +58,7 @@ int main(int argc,char **args)
 
   ierr = VecGetOwnershipRange(x,&rstart,&rend);CHKERRQ(ierr);
   ierr = VecGetLocalSize(x,&nlocal);CHKERRQ(ierr);
-
+  //  cout << rstart << '\t' << rend << '\t' << nlocal << endl; // TODO
   /*
      Create matrix.  When using MatCreate(), the matrix format can
      be specified at runtime.
@@ -71,7 +71,7 @@ int main(int argc,char **args)
      to have the same parallel layout as the vector created above.
   */
   ierr = MatCreate(PETSC_COMM_WORLD,&A);CHKERRQ(ierr);
-  ierr = MatSetSizes(A,nlocal,nlocal,n,n);CHKERRQ(ierr);
+  ierr = MatSetSizes(A,nlocal,nlocal,n,n);CHKERRQ(ierr); // TODO: This is good, but I don't quite understand the meaning of "number of local rows/columns" here. Does this mean the matrix A is locally nlocal by nlocal?
   ierr = MatSetFromOptions(A);CHKERRQ(ierr);
   ierr = MatSetUp(A);CHKERRQ(ierr);
 
@@ -86,22 +86,61 @@ int main(int argc,char **args)
   */
 
 
-  if (!rstart) {
-    rstart = 1;
-    i      = 0; col[0] = 0; col[1] = 1; value[0] = 2.0; value[1] = -1.0;
-    ierr   = MatSetValues(A,1,&i,2,col,value,INSERT_VALUES);CHKERRQ(ierr);
-  }
-  if (rend == n) {
-    rend = n-1;
-    i    = n-1; col[0] = n-2; col[1] = n-1; value[0] = -1.0; value[1] = 2.0;
-    ierr = MatSetValues(A,1,&i,2,col,value,INSERT_VALUES);CHKERRQ(ierr);
-  }
+//  if (!rstart) {
+//    rstart = 1;
+//    i      = 0; col[0] = 0; col[1] = 1; value[0] = 2.0; value[1] = -1.0;
+//    ierr   = MatSetValues(A,1,&i,2,col,value,INSERT_VALUES);CHKERRQ(ierr);
+//  }
+//  if (rend == n) {
+//    rend = n-1;
+//    i    = n-1; col[0] = n-2; col[1] = n-1; value[0] = -1.0; value[1] = 2.0;
+//    ierr = MatSetValues(A,1,&i,2,col,value,INSERT_VALUES);CHKERRQ(ierr);
+//  }
+//
+//  /* Set entries corresponding to the mesh interior */
+//  value[0] = -1.0; value[1] = 2.0; value[2] = -1.0;
+//  for (i=rstart; i<rend; i++) {
+//    col[0] = i-1; col[1] = i; col[2] = i+1;
+//    ierr   = MatSetValues(A,1,&i,3,col,value,INSERT_VALUES);CHKERRQ(ierr);
+//  }
 
-  /* Set entries corresponding to the mesh interior */
-  value[0] = -1.0; value[1] = 2.0; value[2] = -1.0;
   for (i=rstart; i<rend; i++) {
-    col[0] = i-1; col[1] = i; col[2] = i+1;
-    ierr   = MatSetValues(A,1,&i,3,col,value,INSERT_VALUES);CHKERRQ(ierr);
+	  if (i==0){
+		  j = 2;
+		  col[0] = 0; col[1] = 4;
+		  value[0] = 10; value[1] = -2;
+		  ierr   = MatSetValues(A,1,&i,j,col,value,INSERT_VALUES);CHKERRQ(ierr);
+	  }
+	  else if (i==1){
+		  j = 3;
+		  col[0] = 0; col[1] = 1; col[2] = 5;
+		  value[0] = 3; value[1] = 9; value[2] = 3;
+		  ierr   = MatSetValues(A,1,&i,j,col,value,INSERT_VALUES);CHKERRQ(ierr);
+	  }
+	  else if (i==2){
+		  j = 3;
+		  col[0] = 1; col[1] = 2; col[2] = 3;
+		  value[0] = 7; value[1] = 8; value[2] = 7;
+		  ierr   = MatSetValues(A,1,&i,j,col,value,INSERT_VALUES);CHKERRQ(ierr);
+	  }
+	  else if (i==3){
+		  j = 4;
+		  col[0] = 0; col[1] = 2; col[2] = 3; col[3] = 4;
+		  value[0] = 3; value[1] = 8; value[2] = 7; value[3] = 5;
+		  ierr   = MatSetValues(A,1,&i,j,col,value,INSERT_VALUES);CHKERRQ(ierr);
+	  }
+	  else if (i==4){
+		  j = 4;
+		  col[0] = 1; col[1] = 3; col[2] = 4; col[3] = 5;
+		  value[0] = 8; value[1] = 9; value[2] = 9; value[3] = 13;
+		  ierr   = MatSetValues(A,1,&i,j,col,value,INSERT_VALUES);CHKERRQ(ierr);
+	  }
+	  else if (i==5){
+		  j = 3;
+		  col[0] = 1; col[1] = 4; col[2] = 5;
+		  value[0] = 4; value[1] = 2; value[2] = -1;
+		  ierr   = MatSetValues(A,1,&i,j,col,value,INSERT_VALUES);CHKERRQ(ierr);
+	  }
   }
 
   /* Assemble the matrix */
@@ -113,7 +152,13 @@ int main(int argc,char **args)
   */
   ierr = VecSet(u,one);CHKERRQ(ierr);
   ierr = MatMult(A,u,b);CHKERRQ(ierr);
-  cout << "A matrix" << A << endl;
+//  ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD, "matrixA.data", 	&viewer );CHKERRQ(ierr);
+//  ierr = VecView(u,viewer);CHKERRQ(ierr);
+  ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_DENSE  );CHKERRQ(ierr);
+  ierr = MatView(A,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
+//  ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+//
+//  PetscViewerDestroy(&viewer);
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                 Create the linear solver and set various options
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
