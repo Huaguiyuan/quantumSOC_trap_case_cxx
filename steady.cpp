@@ -29,7 +29,7 @@ int main(int argc,char **args)
   PC             pc;               /* preconditioner context */
   PetscReal      norm,tol=1.e-11;  /* norm of solution error */
   PetscErrorCode ierr;
-  PetscInt       i,j,n = 6,col[3],its,rstart,rend,nlocal;
+  PetscInt       i,j,n = 6,col[3],its,Istart,Iend,nlocal;
   PetscScalar    neg_one = -1.0,one = 1.0,value[3];
 //  PetscViewer    viewer;
   PetscInitialize(&argc,&args,(char*)0,help);
@@ -40,25 +40,6 @@ int main(int argc,char **args)
          the linear system, Ax = b.
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  /*
-     Create vectors.  Note that we form 1 vector from scratch and
-     then duplicate as needed. For this simple case let PETSc decide how
-     many elements of the vector are stored on each processor. The second
-     argument to VecSetSizes() below causes PETSc to decide.
-  */
-  ierr = VecCreate(PETSC_COMM_WORLD,&x);CHKERRQ(ierr);
-  ierr = VecSetSizes(x,PETSC_DECIDE,n);CHKERRQ(ierr);
-  ierr = VecSetFromOptions(x);CHKERRQ(ierr);
-  ierr = VecDuplicate(x,&b);CHKERRQ(ierr);
-  ierr = VecDuplicate(x,&u);CHKERRQ(ierr);
-
-  /* Identify the starting and ending mesh points on each
-     processor for the interior part of the mesh. We let PETSc decide
-     above. */
-
-  ierr = VecGetOwnershipRange(x,&rstart,&rend);CHKERRQ(ierr);
-  ierr = VecGetLocalSize(x,&nlocal);CHKERRQ(ierr);
-  //  cout << rstart << '\t' << rend << '\t' << nlocal << endl; // TODO
   /*
      Create matrix.  When using MatCreate(), the matrix format can
      be specified at runtime.
@@ -71,10 +52,11 @@ int main(int argc,char **args)
      to have the same parallel layout as the vector created above.
   */
   ierr = MatCreate(PETSC_COMM_WORLD,&A);CHKERRQ(ierr);
-  ierr = MatSetSizes(A,nlocal,nlocal,n,n);CHKERRQ(ierr); // TODO: This is good, but I don't quite understand the meaning of "number of local rows/columns" here. Does this mean the matrix A is locally nlocal by nlocal?
+  ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n);CHKERRQ(ierr); // TODO: This is good, but I don't quite understand the meaning of "number of local rows/columns" here. Does this mean the matrix A is locally nlocal by nlocal?
   ierr = MatSetFromOptions(A);CHKERRQ(ierr);
   ierr = MatSetUp(A);CHKERRQ(ierr);
 
+  MatGetOwnershipRange(A,&Istart,&Iend);
   /*
      Assemble matrix.
 
@@ -104,7 +86,7 @@ int main(int argc,char **args)
 //    ierr   = MatSetValues(A,1,&i,3,col,value,INSERT_VALUES);CHKERRQ(ierr);
 //  }
 
-  for (i=rstart; i<rend; i++) {
+  for (i=Istart; i<Iend; i++) {
 	  if (i==0){
 		  j = 2;
 		  col[0] = 0; col[1] = 4;
@@ -146,6 +128,19 @@ int main(int argc,char **args)
   /* Assemble the matrix */
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+
+
+  /*
+     Create vectors.  Note that we form 1 vector from scratch and
+     then duplicate as needed. For this simple case let PETSc decide how
+     many elements of the vector are stored on each processor. The second
+     argument to VecSetSizes() below causes PETSc to decide.
+  */
+  ierr = VecCreate(PETSC_COMM_WORLD,&x);CHKERRQ(ierr);
+  ierr = VecSetSizes(x,PETSC_DECIDE,n);CHKERRQ(ierr);
+  ierr = VecSetFromOptions(x);CHKERRQ(ierr);
+  ierr = VecDuplicate(x,&b);CHKERRQ(ierr);
+  ierr = VecDuplicate(x,&u);CHKERRQ(ierr);
 
   /*
      Set exact solution; then compute right-hand-side vector.
