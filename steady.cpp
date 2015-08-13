@@ -17,8 +17,7 @@ T*/
   Note:  The corresponding uniprocessor example is ex1.c
 */
 #include <petscksp.h>
-#include <iostream>
-using namespace std;
+#include "steady.h"
 #undef __FUNCT__
 #define __FUNCT__ "main"
 int main(int argc,char **args)
@@ -29,16 +28,39 @@ int main(int argc,char **args)
   PC             pc;               /* preconditioner context */
   PetscReal      norm,tol=1.e-11;  /* norm of solution error */
   PetscErrorCode ierr;
-  PetscInt       i,j,n = 6,col[3],its,Istart,Iend,nlocal;
-  PetscScalar    neg_one = -1.0,one = 1.0,value[3];
-//  PetscViewer    viewer;
+  const PetscInt N=0, Q=0, DIM=4*(N+1)*(N+1)*(Q+1)*(Q+1);
+  PetscInt       i,j,m,n,p,q,k,r,c,col[DIM],its,rstart,rend,nlocal;
+  PetscScalar    neg_one = -1.0,one = 1.0,value[DIM];
+
   PetscInitialize(&argc,&args,(char*)0,help);
   ierr = PetscOptionsGetInt(NULL,"-n",&n,NULL);CHKERRQ(ierr);
+
+//  a=1.0-PETSC_i;
+//  printf("%g+%gi\n",(double)PetscRealPart(a*a),(double)PetscImaginaryPart(a*a));
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
          Compute the matrix and right-hand-side vector that define
          the linear system, Ax = b.
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  /*
+     Create vectors.  Note that we form 1 vector from scratch and
+     then duplicate as needed. For this simple case let PETSc decide how
+     many elements of the vector are stored on each processor. The second
+     argument to VecSetSizes() below causes PETSc to decide.
+  */
+  ierr = VecCreate(PETSC_COMM_WORLD,&x);CHKERRQ(ierr);
+  ierr = VecSetSizes(x,PETSC_DECIDE,DIM);CHKERRQ(ierr);
+  ierr = VecSetFromOptions(x);CHKERRQ(ierr);
+  ierr = VecDuplicate(x,&b);CHKERRQ(ierr);
+  ierr = VecDuplicate(x,&u);CHKERRQ(ierr);
+
+  /* Identify the starting and ending mesh points on each
+     processor for the interior part of the mesh. We let PETSc decide
+     above. */
+
+  ierr = VecGetOwnershipRange(x,&rstart,&rend);CHKERRQ(ierr);
+  ierr = VecGetLocalSize(x,&nlocal);CHKERRQ(ierr);
 
   /*
      Create matrix.  When using MatCreate(), the matrix format can
@@ -52,11 +74,10 @@ int main(int argc,char **args)
      to have the same parallel layout as the vector created above.
   */
   ierr = MatCreate(PETSC_COMM_WORLD,&A);CHKERRQ(ierr);
-  ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n);CHKERRQ(ierr); // TODO: This is good, but I don't quite understand the meaning of "number of local rows/columns" here. Does this mean the matrix A is locally nlocal by nlocal?
+  ierr = MatSetSizes(A,nlocal,nlocal,DIM,DIM);CHKERRQ(ierr);
   ierr = MatSetFromOptions(A);CHKERRQ(ierr);
   ierr = MatSetUp(A);CHKERRQ(ierr);
 
-  MatGetOwnershipRange(A,&Istart,&Iend);
   /*
      Assemble matrix.
 
@@ -66,94 +87,28 @@ int main(int argc,char **args)
      For matrix assembly, each processor contributes entries for
      the part that it owns locally.
   */
+  for (i=rstart; i<rend; i++) {
+  	  if (i==0){
+  		  j = 1;
+  		  col[0] = 0;
+  		  value[0] = 10+PETSC_i;
+  		  ierr   = MatSetValues(A,1,&i,j,col,value,INSERT_VALUES);CHKERRQ(ierr);
+  	  }
+    }
 
-
-//  if (!rstart) {
-//    rstart = 1;
-//    i      = 0; col[0] = 0; col[1] = 1; value[0] = 2.0; value[1] = -1.0;
-//    ierr   = MatSetValues(A,1,&i,2,col,value,INSERT_VALUES);CHKERRQ(ierr);
-//  }
-//  if (rend == n) {
-//    rend = n-1;
-//    i    = n-1; col[0] = n-2; col[1] = n-1; value[0] = -1.0; value[1] = 2.0;
-//    ierr = MatSetValues(A,1,&i,2,col,value,INSERT_VALUES);CHKERRQ(ierr);
-//  }
-//
-//  /* Set entries corresponding to the mesh interior */
-//  value[0] = -1.0; value[1] = 2.0; value[2] = -1.0;
-//  for (i=rstart; i<rend; i++) {
-//    col[0] = i-1; col[1] = i; col[2] = i+1;
-//    ierr   = MatSetValues(A,1,&i,3,col,value,INSERT_VALUES);CHKERRQ(ierr);
-//  }
-
-  for (i=Istart; i<Iend; i++) {
-	  if (i==0){
-		  j = 2;
-		  col[0] = 0; col[1] = 4;
-		  value[0] = 10; value[1] = -2;
-		  ierr   = MatSetValues(A,1,&i,j,col,value,INSERT_VALUES);CHKERRQ(ierr);
-	  }
-	  else if (i==1){
-		  j = 3;
-		  col[0] = 0; col[1] = 1; col[2] = 5;
-		  value[0] = 3; value[1] = 9; value[2] = 3;
-		  ierr   = MatSetValues(A,1,&i,j,col,value,INSERT_VALUES);CHKERRQ(ierr);
-	  }
-	  else if (i==2){
-		  j = 3;
-		  col[0] = 1; col[1] = 2; col[2] = 3;
-		  value[0] = 7; value[1] = 8; value[2] = 7;
-		  ierr   = MatSetValues(A,1,&i,j,col,value,INSERT_VALUES);CHKERRQ(ierr);
-	  }
-	  else if (i==3){
-		  j = 4;
-		  col[0] = 0; col[1] = 2; col[2] = 3; col[3] = 4;
-		  value[0] = 3; value[1] = 8; value[2] = 7; value[3] = 5;
-		  ierr   = MatSetValues(A,1,&i,j,col,value,INSERT_VALUES);CHKERRQ(ierr);
-	  }
-	  else if (i==4){
-		  j = 4;
-		  col[0] = 1; col[1] = 3; col[2] = 4; col[3] = 5;
-		  value[0] = 8; value[1] = 9; value[2] = 9; value[3] = 13;
-		  ierr   = MatSetValues(A,1,&i,j,col,value,INSERT_VALUES);CHKERRQ(ierr);
-	  }
-	  else if (i==5){
-		  j = 3;
-		  col[0] = 1; col[1] = 4; col[2] = 5;
-		  value[0] = 4; value[1] = 2; value[2] = -1;
-		  ierr   = MatSetValues(A,1,&i,j,col,value,INSERT_VALUES);CHKERRQ(ierr);
-	  }
-  }
 
   /* Assemble the matrix */
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-
-
-  /*
-     Create vectors.  Note that we form 1 vector from scratch and
-     then duplicate as needed. For this simple case let PETSc decide how
-     many elements of the vector are stored on each processor. The second
-     argument to VecSetSizes() below causes PETSc to decide.
-  */
-  ierr = VecCreate(PETSC_COMM_WORLD,&x);CHKERRQ(ierr);
-  ierr = VecSetSizes(x,PETSC_DECIDE,n);CHKERRQ(ierr);
-  ierr = VecSetFromOptions(x);CHKERRQ(ierr);
-  ierr = VecDuplicate(x,&b);CHKERRQ(ierr);
-  ierr = VecDuplicate(x,&u);CHKERRQ(ierr);
 
   /*
      Set exact solution; then compute right-hand-side vector.
   */
   ierr = VecSet(u,one);CHKERRQ(ierr);
   ierr = MatMult(A,u,b);CHKERRQ(ierr);
-//  ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD, "matrixA.data", 	&viewer );CHKERRQ(ierr);
-//  ierr = VecView(u,viewer);CHKERRQ(ierr);
   ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_DENSE  );CHKERRQ(ierr);
   ierr = MatView(A,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
-//  ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-//
-//  PetscViewerDestroy(&viewer);
+//  ierr = VecView(b,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                 Create the linear solver and set various options
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
