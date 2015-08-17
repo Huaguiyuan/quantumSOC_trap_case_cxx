@@ -4,23 +4,25 @@ FFLAGS	         =
 CPPFLAGS         =
 FPPFLAGS         =
 LOCDIR           = 
-EXAMPLESC        = steady.cpp ex23.c ex11.c
+EXAMPLESC        = main.cpp steady.cpp obs.cpp
 EXAMPLESF        = 
 MANSEC           = KSP
 CLEANFILES       = rhs.vtk solution.vtk
 NP               = 1
+OBJ=$(EXAMPLESC:.cpp=.o)
 
 include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 
-steady: steady.o  chkopts
-	-${CLINKER} -o steady steady.o  ${PETSC_KSP_LIB}
-	${RM} steady.o
+EXE = SteadyState
+${EXE}: ${OBJ}  chkopts
+	-${CLINKER} -o ${EXE} ${OBJ}  ${PETSC_KSP_LIB}
+#	${RM} ${OBJ}
 
-ex23: ex23.o  chkopts
-	-${CLINKER} -o ex23 ex23.o  ${PETSC_KSP_LIB}
-	${RM} ex23.o
+#EXE = steady
+#${EXE}: ${EXE}.o  chkopts
+#	-${CLINKER} -o ${EXE} ${EXE}.o  ${PETSC_KSP_LIB}
+#	${RM} ${EXE}.o
 
-ex11: ex11.o  chkopts
-	-${CLINKER} -o ex11 ex11.o  ${PETSC_KSP_LIB}
-	${RM} ex11.o
+touch:
+	touch *.cpp *.h
