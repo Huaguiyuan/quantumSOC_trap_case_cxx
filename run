@@ -6,7 +6,7 @@ make $exe
 
 if [ "$?" = "0" ]; then
     ./$exe  # -draw_pause -1
-#    mpirun -n 6 ./$exe #-draw_pause -1 #-mat_view draw 
+#    mpirun -n 6 ./$exe -draw_pause -1 #-mat_view draw 
 else
     rm $exe
     exit 1

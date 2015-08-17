@@ -12,7 +12,7 @@ void cMasterMatrix::initialize(){
   delta_c = 1;
   kappa = 1;
   N=1;
-  Q=1;
+  Q=0;
   DIM=4*(N+1)*(N+1)*(Q+1)*(Q+1);
   DIM2 = 2*(N+1)*(Q+1);
   tol=1.e-11;
@@ -439,15 +439,15 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
   /*
     Set exact solution; then compute right-hand-side vector.
   */
-//    ierr = VecSet(u,one);CHKERRQ(ierr);
+//    ierr = VecSet(b,one);CHKERRQ(ierr);
 //  ierr = MatMult(G,u,b);CHKERRQ(ierr);
   for (ROW=rstart;ROW<rend;ROW++){
     if (ROW==0) {
-      val=one;
+      val=1.0;
       ierr = VecSetValues(b,1,&ROW,&val, INSERT_VALUES);
     }
     else {
-      val=one-one;
+      val=0.0;
       ierr = VecSetValues(b,1,&ROW,&val, INSERT_VALUES);
     }
   }
@@ -486,7 +486,7 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
   ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
   ierr = PCSetType(pc,PCJACOBI);CHKERRQ(ierr);
 //  ierr = PCSetType(pc,PCSOR);CHKERRQ(ierr);
-  ierr = KSPSetTolerances(ksp,1.e-11 ,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);CHKERRQ(ierr);
+  ierr = KSPSetTolerances(ksp,1.e-15 ,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);CHKERRQ(ierr);
   
   /*
     Set runtime options, e.g.,
@@ -515,18 +515,18 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
      Check solution and clean up
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-    ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,      PETSC_VIEWER_ASCII_MATLAB  );CHKERRQ(ierr);
-  ierr = VecView(x,   PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
   /*
     Check the error
   */
 //    ierr = VecAXPY(x,neg_one,u);CHKERRQ(ierr);
 //  ierr = VecNorm(x,NORM_2,&norm);CHKERRQ(ierr);
-//  ierr = KSPGetIterationNumber(ksp,&its);CHKERRQ(ierr);
-//  ierr = PetscPrintf(PETSC_COMM_WORLD,"Iterations %D\n",its);CHKERRQ(ierr);
 //  if (norm > tol) {
 //    ierr = PetscPrintf(PETSC_COMM_WORLD,"Norm of error %g, Iterations %D\n",(double)norm,its);CHKERRQ(ierr);
 //  }
+  ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,      PETSC_VIEWER_ASCII_MATLAB  );CHKERRQ(ierr);
+   ierr = VecView(x,   PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
+    ierr = KSPGetIterationNumber(ksp,&its);CHKERRQ(ierr);
+    ierr = PetscPrintf(PETSC_COMM_WORLD,"Iterations %D\n",its);CHKERRQ(ierr);
 }
 
 
