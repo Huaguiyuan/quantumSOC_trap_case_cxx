@@ -25,10 +25,8 @@ protected:
   PetscInt       N,Q,DIM;
   PetscScalar    qr,Omega,delta,varepsilon,delta_c,kappa;
   Vec            x;          /* steady state solution */
-  PetscInt 		 DIM2, rhostart, rhoend;
-  Mat      	     RhoMat;
   PetscMPIInt      rank, size;
-
+  double    	PhotonNumber, PhotonFluc;
 public:
   cMasterMatrix(){}
   ~cMasterMatrix(){}
@@ -43,6 +41,6 @@ public:
   PetscErrorCode viewMatrix();
   PetscErrorCode MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
   		int ct, int mt, int nt, int pt, int qt);
-  PetscErrorCode ReshapeRho();
+  PetscErrorCode observables();
 };
 #endif

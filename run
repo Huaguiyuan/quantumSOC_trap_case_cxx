@@ -6,7 +6,7 @@ make $exe
 
 if [ "$?" = "0" ]; then
     # ./$exe   -pc_type jacobi -ksp_monitor_short #-ksp_plot_eigenvalues_explicitly -draw_pause -1 #-ksp_monitor_singular_value -ksp_monitor_true_residual
- ./$exe  -ksp_monitor_short -ksp_type bcgs -pc_type none
+mpirun -n 6 ./$exe  -ksp_monitor_short   -pc_type jacobi   -ksp_type gmres -ksp_gmres_restart 200 # -ksp_gmres_modifiedgramschmidt 
 #        mpirun -n 6 ./$exe -ksp_type bicg -pc_type jacobi  -ksp_monitor_short #-draw_pause -1 #-mat_view draw 
 else
     rm $exe

@@ -4,6 +4,9 @@ static char help[] = "Solves the steady state of Master Equation.\n\n";
 /*T
    Concepts: KSP^basic parallel example; Sparse matrix construction;
    Processors: n
+   mpirun -n 6 SteadyState -ksp_monitor_short   -pc_type jacobi   -ksp_type gmres -ksp_gmres_restart 200
+   or
+   ./SteadyState -ksp_monitor_short   -pc_type jacobi   -ksp_type gmres -ksp_gmres_restart 200
 T*/
 
 /*
@@ -22,7 +25,6 @@ T*/
 #define root 0
 int main(int argc,char **args){
   PetscErrorCode ierr;
-
   PetscInitialize(&argc,&args,(char*)0,help);
   ierr = PetscPrintf(PETSC_COMM_WORLD,
 		     "======================================================================\n"
@@ -44,7 +46,7 @@ int main(int argc,char **args){
   GMatrix.construction();
   GMatrix.seek_steady_state();
 //  GMatrix.viewMatrix();
-
+  GMatrix.observables();
   /*
      Always call PetscFinalize() before exiting a program.  This routine
        - finalizes the PETSc libraries as well as MPI

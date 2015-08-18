@@ -45,9 +45,8 @@ void cMasterMatrix::initialize(){
 //  kappa = 1;
 //  N=2;
 //  Q=1;
-  DIM=4*(N+1)*(N+1)*(Q+1)*(Q+1);
-  DIM2 = 2*(N+1)*(Q+1);
-//  tol=1.e-11;
+	//  tol=1.e-11;
+	DIM=4*(N+1)*(N+1)*(Q+1)*(Q+1);
   one =1.0;neg_one=-1.0;
 }
 
@@ -143,7 +142,7 @@ PetscErrorCode cMasterMatrix::viewMatrix(){
 // Runtime option using database keys:  -mat_view draw -draw_pause -1
 
 //	ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,	PETSC_VIEWER_ASCII_DENSE  );CHKERRQ(ierr);
-//  ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,	PETSC_VIEWER_ASCII_MATLAB  );CHKERRQ(ierr);
+  ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,	PETSC_VIEWER_ASCII_MATLAB  );CHKERRQ(ierr);
 //  ierr = MatView(G,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
 
 //Vec tmpu;
@@ -154,7 +153,7 @@ PetscErrorCode cMasterMatrix::viewMatrix(){
 //  PetscViewerDrawOpen(PETSC_COMM_WORLD,0,"",300,0,300,300,&viewer);
 //	  ierr = MatView(G,	viewer );CHKERRQ(ierr);
 //	  ierr = VecView(b,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
-//    ierr = VecView(x,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
+    ierr = VecView(x,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
 }
 
 PetscErrorCode cMasterMatrix::MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
@@ -250,7 +249,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	}
         if (nonzeros > __MAXNOZEROS__){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
-        	<<  __MAXNOZEROS__ <<" const arrays. Try increasing the max number in steady.h" << endl;
+        	<<  __MAXNOZEROS__ <<" const arrays. Try increasing the max number in steady.h" << endl;exit(1);
         }
         ierr   = MatSetValues(G,1,&ROW,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
     	break;
@@ -318,7 +317,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	}
         if (nonzeros > __MAXNOZEROS__){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
-        	<<  __MAXNOZEROS__ <<" const arrays. Try increasing the max number in steady.h" << endl;
+        	<<  __MAXNOZEROS__ <<" const arrays. Try increasing the max number in steady.h" << endl;exit(1);
         }
         ierr   = MatSetValues(G,1,&ROW,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
     	break;
@@ -386,7 +385,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	}
         if (nonzeros > __MAXNOZEROS__){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
-        	<<  __MAXNOZEROS__ <<" const arrays. Try increasing the max number in steady.h" << endl;
+        	<<  __MAXNOZEROS__ <<" const arrays. Try increasing the max number in steady.h" << endl;exit(1);
         }
         ierr   = MatSetValues(G,1,&ROW,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
         break;
@@ -454,7 +453,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	}
         if (nonzeros > __MAXNOZEROS__){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
-        	<<  __MAXNOZEROS__ <<" const arrays. Try increasing the max number in steady.h" << endl;
+        	<<  __MAXNOZEROS__ <<" const arrays. Try increasing the max number in steady.h" << endl;exit(1);
         }
         ierr   = MatSetValues(G,1,&ROW,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
         break;
@@ -471,21 +470,23 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
   /*
     Set exact solution; then compute right-hand-side vector.
   */
-  ierr = VecSet(u,one);CHKERRQ(ierr);
-  ierr = MatMult(G,u,b);CHKERRQ(ierr);
-//  for (ROW=rstart;ROW<rend;ROW++){
-//    if (ROW==0) {
-//      val=1.0;
-//      ierr = VecSetValues(b,1,&ROW,&val, INSERT_VALUES);
-//    }
-//    else {
-//      val=0.0;
-//      ierr = VecSetValues(b,1,&ROW,&val, INSERT_VALUES);
-//    }
-//  }
-//
-//  ierr =  VecAssemblyBegin(b); CHKERRQ(ierr);
-//  ierr =  VecAssemblyEnd(b); CHKERRQ(ierr);
+//  ierr = VecSet(u,one);CHKERRQ(ierr);
+//  ierr = MatMult(G,u,b);CHKERRQ(ierr);
+  for (ROW=rstart;ROW<rend;ROW++){
+    if (ROW==0) {
+      val=1.0;
+      ierr = VecSetValues(b,1,&ROW,&val, INSERT_VALUES);
+    }
+    else {
+      val=0.0;
+      ierr = VecSetValues(b,1,&ROW,&val, INSERT_VALUES);
+    }
+  }
+
+  ierr =  VecAssemblyBegin(b); CHKERRQ(ierr);
+  ierr =  VecAssemblyEnd(b); CHKERRQ(ierr);
+//  ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,	PETSC_VIEWER_ASCII_MATLAB  );CHKERRQ(ierr);
+//  ierr = VecView(b,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                  Create the linear solver and set various options
       - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -542,35 +543,58 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
         Check the error
      */
 //    ierr = VecView(x,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-     ierr = VecAXPY(x,neg_one,u);CHKERRQ(ierr);
-     ierr = VecNorm(x,NORM_2,&norm);CHKERRQ(ierr);
-     ierr = KSPGetIterationNumber(ksp,&its);CHKERRQ(ierr);
+//     ierr = VecAXPY(x,neg_one,u);CHKERRQ(ierr);
+//     ierr = VecNorm(x,NORM_2,&norm);CHKERRQ(ierr);
+//     ierr = KSPGetIterationNumber(ksp,&its);CHKERRQ(ierr);
 //       if (norm > tol) {
-       ierr = PetscPrintf(PETSC_COMM_WORLD,"Norm of error %g, Iterations %D\n",(double)norm,its);CHKERRQ(ierr);
+//       ierr = PetscPrintf(PETSC_COMM_WORLD,"Norm of error %g, Iterations %D\n",(double)norm,its);CHKERRQ(ierr);
 //       }
 
 
 }
 
 
-//PetscErrorCode cMasterMatrix::ReshapeRho(){
-//	  ierr = MatCreate(PETSC_COMM_WORLD,&RhoMat);CHKERRQ(ierr);
-//	  ierr = MatSetSizes(RhoMat,PETSC_DECIDE,PETSC_DECIDE,DIM2,DIM2);CHKERRQ(ierr);
-//	  ierr = MatSetFromOptions(RhoMat);CHKERRQ(ierr);
-//	  ierr = MatSetUp(RhoMat);CHKERRQ(ierr);
-//	  /*
-//	         Currently, all PETSc parallel matrix formats are partitioned by
-//	         contiguous chunks of rows across the processors.  Determine which
-//	         rows of the matrix are locally owned.
-//	      */
-//	  ierr = MatGetOwnershipRange(RhoMat,&rhostart,&rhoend);CHKERRQ(ierr);
-////	if (rhostart == 0){
-////		for (int tmpi = 0; tmpi < DIM; ++tmpi) {
-////			cout << VecGetValues(x,1,&tmpi) << endl;
-////		}
-////	}
-//
-//}
+PetscErrorCode cMasterMatrix::observables(){
+	int nonzeros = 0;double phtn_n_r, phtn_fluc_r;
+	cout.precision(16);
+	phtn_n_r = 0;phtn_fluc_r = 0;
+	for (ROW=rstart;ROW<rend;ROW++){
+		block(ROW, r, m, n, p, q);
+		if (r==0 || r==3){ // Getting diagonal elements of rho_up_up and rho_dn_dn for all photon and orbital numbers
+			if (m==n && p==q){
+				ierr = VecGetValues(x,1,&ROW,&value[nonzeros]);CHKERRQ(ierr);
+				col[nonzeros] = m; // saved for photon number computation
+//				cout << value[nonzeros] << '\t' << ROW << '\t' << m << '\t' << p << endl; // // This is the diagonal index
+				if (PetscImaginaryPart(value[nonzeros]) > 1.e-5) {
+					cerr << "check the convergence, the imaginary part is intolerably large, stopping now... " << endl;
+					exit(1);
+				}
+				phtn_n_r += PetscRealPart(value[nonzeros])*m; // checked the imaginary part is exceedingly small as it should be.
+				phtn_fluc_r += PetscRealPart(value[nonzeros])*m*m;
+				nonzeros++;
+			}
+		}
+	}
+//	cout << "rank " << rank << " has photon number: " << phtn_n_r << " photon fluc: " << phtn_fluc_r << endl;
+	MPI_Reduce(&phtn_n_r, &PhotonNumber, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+	MPI_Reduce(&phtn_fluc_r, &PhotonFluc, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+	if (rank == 0) {
+		PhotonFluc = (PhotonFluc - PhotonNumber*PhotonNumber)/PhotonNumber; // normalization to 1 for coherent state at root
+	cout << "photon number is " << PhotonNumber  << '\t'
+			<< "photon number fluctuation is " << PhotonFluc << endl;
+	}
+	for (int jtmp = 0; jtmp < size; ++jtmp) {
+		if (jtmp == rank) {
+			for (int itmp = 0; itmp < nonzeros; itmp++) {
+				if (col[itmp] !=0){
+					cout << "rank " << rank << " has " << value[itmp] << endl;
+				}
+//					'\t' << "and photon number is " << col[itmp] << endl;
+				}
+		}
+	}
+
+}
 PetscErrorCode cMasterMatrix::destruction(){
   /*
     Free work space.  All PETSc objects should be destroyed when they
