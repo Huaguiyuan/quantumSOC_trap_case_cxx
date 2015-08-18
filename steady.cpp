@@ -21,7 +21,9 @@ void cMasterMatrix::initialize(){
 	        fscanf(input,"%s %d", dummyname, &intdummyvalue);
 	        Q = intdummyvalue;    if (ig == 0) cout << dummyname << "=" << Q << endl;
 	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
-	        qr = dummyvalue;    if (ig == 0) cout << dummyname << "=" << qr << endl;
+	        omega = dummyvalue;    if (ig == 0) cout << dummyname << "=" << omega << endl;
+	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
+	        qr = dummyvalue*sqrt(omega);    if (ig == 0) cout << dummyname << "=" << qr << endl;
 	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
 	        Omega = dummyvalue;    if (ig == 0) cout << dummyname << "=" << Omega << endl;
 	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
@@ -142,7 +144,7 @@ PetscErrorCode cMasterMatrix::viewMatrix(){
 // Runtime option using database keys:  -mat_view draw -draw_pause -1
 
 //	ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,	PETSC_VIEWER_ASCII_DENSE  );CHKERRQ(ierr);
-  ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,	PETSC_VIEWER_ASCII_MATLAB  );CHKERRQ(ierr);
+//  ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,	PETSC_VIEWER_ASCII_MATLAB  );CHKERRQ(ierr);
 //  ierr = MatView(G,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
 
 //Vec tmpu;
@@ -153,7 +155,7 @@ PetscErrorCode cMasterMatrix::viewMatrix(){
 //  PetscViewerDrawOpen(PETSC_COMM_WORLD,0,"",300,0,300,300,&viewer);
 //	  ierr = MatView(G,	viewer );CHKERRQ(ierr);
 //	  ierr = VecView(b,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
-    ierr = VecView(x,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
+//    ierr = VecView(x,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
 }
 
 PetscErrorCode cMasterMatrix::MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
@@ -186,7 +188,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     case 0:
     	// MUU block
     	ct = r; mt = m; nt = n; pt = p; qt = q;
-	_val_ = (p+0.5+delta)/PETSC_i-(q+0.5+delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
+	_val_ = ((p+0.5)*omega+delta)/PETSC_i-((q+0.5)*omega+delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
 	MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
@@ -256,7 +258,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     case 1:
     	// MUD block
     	ct = r; mt = m; nt = n; pt = p; qt = q;
-			_val_ = (p+0.5+delta)/PETSC_i-(q+0.5-delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
+			_val_ = ((p+0.5)*omega+delta)/PETSC_i-((q+0.5)*omega-delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
 			MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
@@ -324,7 +326,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     case 2:
     	// MDU block
     	ct = r; mt = m; nt = n; pt = p; qt = q;
-			_val_ = (p+0.5-delta)/PETSC_i-(q+0.5+delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
+			_val_ = ((p+0.5)*omega-delta)/PETSC_i-((q+0.5)*omega+delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
 			MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
@@ -392,7 +394,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     case 3:
     	// MDD block
     	ct = r; mt = m; nt = n; pt = p; qt = q;
-			_val_ = (p+0.5-delta)/PETSC_i-(q+0.5-delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
+			_val_ = ((p+0.5)*omega-delta)/PETSC_i-((q+0.5)*omega-delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
 			MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
@@ -555,20 +557,21 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
 
 
 PetscErrorCode cMasterMatrix::observables(){
-	int nonzeros = 0;double phtn_n_r, phtn_fluc_r;
+	int nonzeros = 0;double phtn_n_r, phtn_fluc_r, tmpdiagrho;
 	cout.precision(16);
-	phtn_n_r = 0;phtn_fluc_r = 0;
+	phtn_n_r = 0;phtn_fluc_r = 0;tmpdiagrho = 0;
 	for (ROW=rstart;ROW<rend;ROW++){
 		block(ROW, r, m, n, p, q);
 		if (r==0 || r==3){ // Getting diagonal elements of rho_up_up and rho_dn_dn for all photon and orbital numbers
 			if (m==n && p==q){
 				ierr = VecGetValues(x,1,&ROW,&value[nonzeros]);CHKERRQ(ierr);
 				col[nonzeros] = m; // saved for photon number computation
-//				cout << value[nonzeros] << '\t' << ROW << '\t' << m << '\t' << p << endl; // // This is the diagonal index
-				if (PetscImaginaryPart(value[nonzeros]) > 1.e-5) {
-					cerr << "check the convergence, the imaginary part is intolerably large, stopping now... " << endl;
-					exit(1);
-				}
+//				cout << value[nonzeros] << '\t' << r+1 << '\t' << m << '\t' << p << endl; //
+//				if (PetscImaginaryPart(value[nonzeros]) > 1.e-5) {
+//					cerr << "check the convergence, the imaginary part is intolerably large, stopping now... " << endl;
+//					exit(1);
+//				}
+				tmpdiagrho += PetscRealPart(value[nonzeros]);
 				phtn_n_r += PetscRealPart(value[nonzeros])*m; // checked the imaginary part is exceedingly small as it should be.
 				phtn_fluc_r += PetscRealPart(value[nonzeros])*m*m;
 				nonzeros++;
@@ -578,21 +581,22 @@ PetscErrorCode cMasterMatrix::observables(){
 //	cout << "rank " << rank << " has photon number: " << phtn_n_r << " photon fluc: " << phtn_fluc_r << endl;
 	MPI_Reduce(&phtn_n_r, &PhotonNumber, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 	MPI_Reduce(&phtn_fluc_r, &PhotonFluc, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+	MPI_Reduce(&tmpdiagrho, &tmpRhoDiagonal, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 	if (rank == 0) {
 		PhotonFluc = (PhotonFluc - PhotonNumber*PhotonNumber)/PhotonNumber; // normalization to 1 for coherent state at root
 	cout << "photon number is " << PhotonNumber  << '\t'
 			<< "photon number fluctuation is " << PhotonFluc << endl;
+//	cout << "sum of diag " << tmpRhoDiagonal << endl;
 	}
-	for (int jtmp = 0; jtmp < size; ++jtmp) {
-		if (jtmp == rank) {
-			for (int itmp = 0; itmp < nonzeros; itmp++) {
-				if (col[itmp] !=0){
-					cout << "rank " << rank << " has " << value[itmp] << endl;
-				}
-//					'\t' << "and photon number is " << col[itmp] << endl;
-				}
-		}
-	}
+
+//	for (int jtmp = 0; jtmp < size; ++jtmp) {
+//		if (jtmp == rank) {
+//			for (int itmp = 0; itmp < nonzeros; itmp++) {
+////				if (col[itmp] !=0){
+//					cout << "rank " << rank << " has " << value[itmp] << '\t' << "and photon number is " << col[itmp] << endl;
+//			}
+//		}
+//	}
 
 }
 PetscErrorCode cMasterMatrix::destruction(){

@@ -23,10 +23,10 @@ private:
 protected:
   PetscErrorCode ierr;
   PetscInt       N,Q,DIM;
-  PetscScalar    qr,Omega,delta,varepsilon,delta_c,kappa;
+  PetscScalar    omega, qr,Omega,delta,varepsilon,delta_c,kappa;
   Vec            x;          /* steady state solution */
   PetscMPIInt      rank, size;
-  double    	PhotonNumber, PhotonFluc;
+  double    	PhotonNumber, PhotonFluc, tmpRhoDiagonal;
 public:
   cMasterMatrix(){}
   ~cMasterMatrix(){}

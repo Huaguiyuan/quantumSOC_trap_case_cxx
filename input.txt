@@ -1,9 +1,10 @@
 N		5
 Q		5
-qr		10
-Omega		10
-delta		10
-varepsilon	10
-delta_c		10
+omega		0.1
+qr		0.22
+Omega		5
+delta		0.5
+varepsilon	1
+delta_c		1
 kappa		10
-tol		1.e-5
+tol		1.e-7

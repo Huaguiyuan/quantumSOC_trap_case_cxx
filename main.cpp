@@ -45,7 +45,7 @@ int main(int argc,char **args){
 //  GMatrix.zombie_call_of_block();
   GMatrix.construction();
   GMatrix.seek_steady_state();
-//  GMatrix.viewMatrix();
+  GMatrix.viewMatrix();
   GMatrix.observables();
   /*
      Always call PetscFinalize() before exiting a program.  This routine
