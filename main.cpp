@@ -22,11 +22,8 @@ T*/
 #define root 0
 int main(int argc,char **args){
   PetscErrorCode ierr;
-//  PetscMPIInt      rank, size;
+
   PetscInitialize(&argc,&args,(char*)0,help);
-//  MPI_Comm_size(PETSC_COMM_WORLD,&size);
-//  MPI_Comm_rank(PETSC_COMM_WORLD,&rank);
-//  cout << rank << '\t' << size << endl;
   ierr = PetscPrintf(PETSC_COMM_WORLD,
 		     "======================================================================\n"
 		     "The purpose of this program is to study the steady state solution of\n"
@@ -46,7 +43,7 @@ int main(int argc,char **args){
 //  GMatrix.zombie_call_of_block();
   GMatrix.construction();
   GMatrix.seek_steady_state();
-  GMatrix.viewMatrix();
+//  GMatrix.viewMatrix();
 
   /*
      Always call PetscFinalize() before exiting a program.  This routine

@@ -2,6 +2,8 @@
 #define STEADY_H_
 #include <petscksp.h>
 #include <iostream>
+#include <fstream>
+#include <assert.h>
 #include <math.h>
 #include <cmath> 
 //#include <ctgmath>
@@ -25,6 +27,8 @@ protected:
   Vec            x;          /* steady state solution */
   PetscInt 		 DIM2, rhostart, rhoend;
   Mat      	     RhoMat;
+  PetscMPIInt      rank, size;
+
 public:
   cMasterMatrix(){}
   ~cMasterMatrix(){}

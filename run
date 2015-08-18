@@ -5,8 +5,9 @@ exe=SteadyState
 make $exe
 
 if [ "$?" = "0" ]; then
-    ./$exe  # -draw_pause -1
-#    mpirun -n 6 ./$exe -draw_pause -1 #-mat_view draw 
+    # ./$exe   -pc_type jacobi -ksp_monitor_short #-ksp_plot_eigenvalues_explicitly -draw_pause -1 #-ksp_monitor_singular_value -ksp_monitor_true_residual
+ ./$exe  -ksp_monitor_short -ksp_type bcgs -pc_type none
+#        mpirun -n 6 ./$exe -ksp_type bicg -pc_type jacobi  -ksp_monitor_short #-draw_pause -1 #-mat_view draw 
 else
     rm $exe
     exit 1

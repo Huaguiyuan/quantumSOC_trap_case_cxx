@@ -4,18 +4,50 @@
 #define __FUNCT__ "steady"
 
 void cMasterMatrix::initialize(){
-  // TODO: change this to read in from input file...
-  qr = 1;
-  Omega = 1;
-  delta = 4;
-  varepsilon = 1;
-  delta_c = 1;
-  kappa = 1;
-  N=1;
-  Q=0;
+	MPI_Comm_size(PETSC_COMM_WORLD,&size);
+	MPI_Comm_rank(PETSC_COMM_WORLD,&rank);
+//	cout << rank << '\t' << size << endl;
+	for (int ig = 0; ig < size; ++ig) {
+	    if (ig ==rank){
+	    	char dummyname[100];
+	    	double dummyvalue;
+	    	int intdummyvalue;
+	        FILE *input;
+	        input = fopen("input.txt","r");
+	        assert(input != NULL);
+	        if (ig == 0)  cout << "Starting to read in parameters from file input.txt" << endl;
+	        fscanf(input,"%s %d", dummyname, &intdummyvalue);
+	        N = intdummyvalue;    if (ig == 0) cout << dummyname << "=" << N << endl;
+	        fscanf(input,"%s %d", dummyname, &intdummyvalue);
+	        Q = intdummyvalue;    if (ig == 0) cout << dummyname << "=" << Q << endl;
+	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
+	        qr = dummyvalue;    if (ig == 0) cout << dummyname << "=" << qr << endl;
+	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
+	        Omega = dummyvalue;    if (ig == 0) cout << dummyname << "=" << Omega << endl;
+	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
+	        delta = dummyvalue;    if (ig == 0) cout << dummyname << "=" << delta << endl;
+	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
+	        varepsilon = dummyvalue;    if (ig == 0) cout << dummyname << "=" << varepsilon << endl;
+	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
+	        delta_c = dummyvalue;    if (ig == 0) cout << dummyname << "=" << delta_c << endl;
+	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
+	        kappa = dummyvalue;    if (ig == 0) cout << dummyname << "=" << kappa << endl;
+	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
+	        tol = dummyvalue;    if (ig == 0) cout << dummyname << "=" << tol << endl;
+	        fclose(input);
+	    }
+	}
+//  qr = 1;
+//  Omega = 1;
+//  delta = 4;
+//  varepsilon = 1;
+//  delta_c = 1;
+//  kappa = 1;
+//  N=2;
+//  Q=1;
   DIM=4*(N+1)*(N+1)*(Q+1)*(Q+1);
   DIM2 = 2*(N+1)*(Q+1);
-  tol=1.e-11;
+//  tol=1.e-11;
   one =1.0;neg_one=-1.0;
 }
 
@@ -439,94 +471,85 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
   /*
     Set exact solution; then compute right-hand-side vector.
   */
-//    ierr = VecSet(b,one);CHKERRQ(ierr);
-//  ierr = MatMult(G,u,b);CHKERRQ(ierr);
-  for (ROW=rstart;ROW<rend;ROW++){
-    if (ROW==0) {
-      val=1.0;
-      ierr = VecSetValues(b,1,&ROW,&val, INSERT_VALUES);
-    }
-    else {
-      val=0.0;
-      ierr = VecSetValues(b,1,&ROW,&val, INSERT_VALUES);
-    }
-  }
-
-  ierr =  VecAssemblyBegin(b); CHKERRQ(ierr);
-  ierr =  VecAssemblyEnd(b); CHKERRQ(ierr);
-
-//    ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,      PETSC_VIEWER_ASCII_MATLAB  );CHKERRQ(ierr);
-//  ierr = VecView(b,   PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
-    
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-     Create the linear solver and set various options
-     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  /*
-    Create linear solver context
-  */
-  ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
-  
-  /*
-    Set operators. Here the matrix that defines the linear system
-    also serves as the preconditioning matrix.
-  */
-  ierr = KSPSetOperators(ksp,G,G);CHKERRQ(ierr);
-  
-  ierr = KSPSetType(ksp,KSPBICG);CHKERRQ(ierr);
-
-  /*
-    Set linear solver defaults for this problem (optional).
-    - By extracting the KSP and PC contexts from the KSP context,
-    we can then directly call any KSP and PC routines to set
-    various options.
-    - The following four statements are optional; all of these
-    parameters could alternatively be specified at runtime via
-    KSPSetFromOptions();
-  */
-  ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
-  ierr = PCSetType(pc,PCJACOBI);CHKERRQ(ierr);
-//  ierr = PCSetType(pc,PCSOR);CHKERRQ(ierr);
-  ierr = KSPSetTolerances(ksp,1.e-15 ,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);CHKERRQ(ierr);
-  
-  /*
-    Set runtime options, e.g.,
-    -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
-    These options will override those specified above as long as
-    KSPSetFromOptions() is called _after_ any other customization
-    routines.
-  */
-  ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-  
-  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-     Solve the linear system
-     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  /*
-    Solve linear system
-  */
-  ierr = KSPSolve(ksp,b,x);CHKERRQ(ierr);
-  
-  /*
-    View solver info; we could instead use the option -ksp_view to
-    print this info to the screen at the conclusion of KSPSolve().
-  */
-  ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-
-  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-     Check solution and clean up
-     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
-  /*
-    Check the error
-  */
-//    ierr = VecAXPY(x,neg_one,u);CHKERRQ(ierr);
-//  ierr = VecNorm(x,NORM_2,&norm);CHKERRQ(ierr);
-//  if (norm > tol) {
-//    ierr = PetscPrintf(PETSC_COMM_WORLD,"Norm of error %g, Iterations %D\n",(double)norm,its);CHKERRQ(ierr);
+  ierr = VecSet(u,one);CHKERRQ(ierr);
+  ierr = MatMult(G,u,b);CHKERRQ(ierr);
+//  for (ROW=rstart;ROW<rend;ROW++){
+//    if (ROW==0) {
+//      val=1.0;
+//      ierr = VecSetValues(b,1,&ROW,&val, INSERT_VALUES);
+//    }
+//    else {
+//      val=0.0;
+//      ierr = VecSetValues(b,1,&ROW,&val, INSERT_VALUES);
+//    }
 //  }
-  ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,      PETSC_VIEWER_ASCII_MATLAB  );CHKERRQ(ierr);
-   ierr = VecView(x,   PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
-    ierr = KSPGetIterationNumber(ksp,&its);CHKERRQ(ierr);
-    ierr = PetscPrintf(PETSC_COMM_WORLD,"Iterations %D\n",its);CHKERRQ(ierr);
+//
+//  ierr =  VecAssemblyBegin(b); CHKERRQ(ierr);
+//  ierr =  VecAssemblyEnd(b); CHKERRQ(ierr);
+  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                 Create the linear solver and set various options
+      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+   /*
+      Create linear solver context
+   */
+   ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
+
+   /*
+      Set operators. Here the matrix that defines the linear system
+      also serves as the preconditioning matrix.
+   */
+   ierr = KSPSetOperators(ksp,G ,G);CHKERRQ(ierr);
+   /*
+       Set linear solver defaults for this problem (optional).
+       - By extracting the KSP and PC contexts from the KSP context,
+         we can then directly call any KSP and PC routines to set
+         various options.
+       - The following four statements are optional; all of these
+         parameters could alternatively be specified at runtime via
+         KSPSetFromOptions();
+    */
+//    ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
+//    ierr = PCSetType(pc,PCJACOBI);CHKERRQ(ierr);
+    ierr = KSPSetTolerances(ksp,tol,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);CHKERRQ(ierr);
+
+    /*
+      Set runtime options, e.g.,
+          -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
+      These options will override those specified above as long as
+      KSPSetFromOptions() is called _after_ any other customization
+      routines.
+    */
+    ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+
+    /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                        Solve the linear system
+       - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+    /*
+       Solve linear system
+    */
+//    KSPSetInitialGuessNonzero(ksp,PETSC_TRUE);
+    ierr = KSPSolve(ksp,b,x);CHKERRQ(ierr);
+
+    /*
+       View solver info; we could instead use the option -ksp_view to
+       print this info to the screen at the conclusion of KSPSolve().
+    */
+    ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+    /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                         Check solution and clean up
+        - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+     /*
+        Check the error
+     */
+//    ierr = VecView(x,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+     ierr = VecAXPY(x,neg_one,u);CHKERRQ(ierr);
+     ierr = VecNorm(x,NORM_2,&norm);CHKERRQ(ierr);
+     ierr = KSPGetIterationNumber(ksp,&its);CHKERRQ(ierr);
+//       if (norm > tol) {
+       ierr = PetscPrintf(PETSC_COMM_WORLD,"Norm of error %g, Iterations %D\n",(double)norm,its);CHKERRQ(ierr);
+//       }
+
+
 }
 
 
