@@ -1,0 +1,15 @@
+#!/bin/bash
+Narray=$(awk 'BEGIN{for(i=1;i<=10;i+=1)print i}')
+Qarray=$(awk 'BEGIN{for(i=1;i<=10;i+=1)print i}')
+for N in $Narray
+do
+    cd N_$N
+    for Q in $Qarray
+    do
+	cd Q_$Q
+	grep "photon number" screen_log.OUT | awk '{ print $4 }' >> /home/ld7/workspace/quantumSOC_trap_case_cxx/prog/photon_number.data
+	grep "photon number" screen_log.OUT | awk '{ print $9 }' >> /home/ld7/workspace/quantumSOC_trap_case_cxx/prog/photon_fluctu.data
+	cd ..
+    done
+    cd ..
+done
