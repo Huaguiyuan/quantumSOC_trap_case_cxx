@@ -11,3 +11,8 @@ for N = 1:10
         i = i+1;
     end
 end
+[aa,bb]=meshgrid(1:10,1:10);
+figure(1)
+surf(aa,bb,a)
+figure(2)
+surf(aa,bb,b)

@@ -1,13 +1,11 @@
 #!/bin/bash 
 
-exe=SteadyState
-
-make $exe
+make SteadyState
 
 if [ "$?" = "0" ]; then
-    # -ksp_gmres_modifiedgramschmidt 
     # ./$exe   -pc_type jacobi -ksp_monitor_short #-ksp_plot_eigenvalues_explicitly -draw_pause -1 #-ksp_monitor_singular_value -ksp_monitor_true_residual
-mpirun -n 6 ./$exe  -ksp_monitor_short   -pc_type jacobi   -ksp_type gmres -ksp_gmres_restart 300 > screen_log.OUT
+mpirun -n 6 ./SteadyState  -ksp_monitor_short   -pc_type jacobi   -ksp_type gmres -ksp_gmres_restart 1500  -ksp_gmres_modifiedgramschmidt -ksp_plot_eigenvalues_explicitly -draw_pause -1 
+    #> screen_log.OUT
 #        mpirun -n 6 ./$exe -ksp_type bicg -pc_type jacobi  -ksp_monitor_short #-draw_pause -1 #-mat_view draw 
 else
     rm $exe
