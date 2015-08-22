@@ -73,7 +73,7 @@ int cMasterMatrix::compute_kt(int ct, int mt, int nt, int pt, int qt){
 }
 
 PetscErrorCode cMasterMatrix::construction(){
-  
+	ierr = PetscViewerCreate(PETSC_COMM_WORLD,&viewer);CHKERRQ(ierr);
   /*
     Create vectors.  Note that we form 1 vector from scratch and
     then duplicate as needed. For this simple case let PETSc decide how
@@ -85,7 +85,7 @@ PetscErrorCode cMasterMatrix::construction(){
   ierr = VecSetFromOptions(x);CHKERRQ(ierr);
   ierr = VecDuplicate(x,&b);CHKERRQ(ierr);
   ierr = VecDuplicate(x,&u);CHKERRQ(ierr);
-  
+  ierr = VecDuplicate(x,&Ab);CHKERRQ(ierr);
   /* Identify the starting and ending mesh points on each
      processor for the interior part of the mesh. We let PETSc decide
      above. */
@@ -104,19 +104,19 @@ PetscErrorCode cMasterMatrix::construction(){
     We pass in nlocal as the "local" size of the matrix to force it
     to have the same parallel layout as the vector created above.
   */
-  ierr = MatCreate(PETSC_COMM_WORLD,&G);CHKERRQ(ierr);
-  ierr = MatSetSizes(G,nlocal,nlocal,DIM,DIM);CHKERRQ(ierr);
-  ierr = MatSetFromOptions(G);CHKERRQ(ierr);
-  ierr = MatSetUp(G);CHKERRQ(ierr);
+  ierr = MatCreate(PETSC_COMM_WORLD,&A);CHKERRQ(ierr);
+  ierr = MatSetSizes(A,nlocal,nlocal,DIM,DIM);CHKERRQ(ierr);
+  ierr = MatSetFromOptions(A);CHKERRQ(ierr);
+  ierr = MatSetUp(A);CHKERRQ(ierr);
   
   assemblance();
 
-  ierr = MatAssemblyBegin(G,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(G,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
 
   // Modify matrix and impose Trace of \rho = 1 as a constraint explicitly.
   PetscInt val; val = 0;
-  ierr = MatZeroRows(G, 1, &val, 0.0, 0, 0);CHKERRQ(ierr); // This has to be done AFTER matrix final assembly by petsc
+  ierr = MatZeroRows(A, 1, &val, 0.0, 0, 0);CHKERRQ(ierr); // This has to be done AFTER matrix final assembly by petsc
   if (rstart == 0) {
     int nonzeros = 0;
     for (m=0;m<=N;m++){
@@ -131,11 +131,11 @@ PetscErrorCode cMasterMatrix::construction(){
 	nonzeros ++;
       }
     }
-    ierr   = MatSetValues(G,1,&rstart,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
+    ierr   = MatSetValues(A,1,&rstart,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
   }
   /* Re-Assemble the matrix */
-  ierr = MatAssemblyBegin(G,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(G,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);    
+  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   
 }
 
@@ -145,15 +145,15 @@ PetscErrorCode cMasterMatrix::viewMatrix(){
 
 //	ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,	PETSC_VIEWER_ASCII_DENSE  );CHKERRQ(ierr);
 //  ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,	PETSC_VIEWER_ASCII_MATLAB  );CHKERRQ(ierr);
-//  ierr = MatView(G,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
+//  ierr = MatView(A,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
 
 //Vec tmpu;
 //ierr = VecDuplicate(x,&tmpu);CHKERRQ(ierr);
-//ierr = MatMult(G,b,tmpu);CHKERRQ(ierr);
+//ierr = MatMult(A,b,tmpu);CHKERRQ(ierr);
 //ierr = VecView(tmpu,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
 
 //  PetscViewerDrawOpen(PETSC_COMM_WORLD,0,"",300,0,300,300,&viewer);
-//	  ierr = MatView(G,	viewer );CHKERRQ(ierr);
+//	  ierr = MatView(A,	viewer );CHKERRQ(ierr);
 //	  ierr = VecView(b,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
 //    ierr = VecView(x,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
 }
@@ -253,7 +253,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
         	<<  __MAXNOZEROS__ <<" const arrays. Try increasing the max number in steady.h" << endl;exit(1);
         }
-        ierr   = MatSetValues(G,1,&ROW,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
+        ierr   = MatSetValues(A,1,&ROW,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
     	break;
     case 1:
     	// MUD block
@@ -321,7 +321,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
         	<<  __MAXNOZEROS__ <<" const arrays. Try increasing the max number in steady.h" << endl;exit(1);
         }
-        ierr   = MatSetValues(G,1,&ROW,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
+        ierr   = MatSetValues(A,1,&ROW,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
     	break;
     case 2:
     	// MDU block
@@ -389,7 +389,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
         	<<  __MAXNOZEROS__ <<" const arrays. Try increasing the max number in steady.h" << endl;exit(1);
         }
-        ierr   = MatSetValues(G,1,&ROW,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
+        ierr   = MatSetValues(A,1,&ROW,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
         break;
     case 3:
     	// MDD block
@@ -457,7 +457,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
         	<<  __MAXNOZEROS__ <<" const arrays. Try increasing the max number in steady.h" << endl;exit(1);
         }
-        ierr   = MatSetValues(G,1,&ROW,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
+        ierr   = MatSetValues(A,1,&ROW,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
         break;
     default:
     	cerr << "Sub-block row index" << r << " is out of range from 0 to 3. Stopping now..." << endl;
@@ -472,21 +472,22 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
   /*
     Set exact solution; then compute right-hand-side vector.
   */
-//  ierr = VecSet(u,one);CHKERRQ(ierr);
-//  ierr = MatMult(G,u,b);CHKERRQ(ierr);
-  for (ROW=rstart;ROW<rend;ROW++){
-    if (ROW==0) {
-      val=1.0;
-      ierr = VecSetValues(b,1,&ROW,&val, INSERT_VALUES);
-    }
-    else {
-      val=0.0;
-      ierr = VecSetValues(b,1,&ROW,&val, INSERT_VALUES);
-    }
-  }
+  ierr = VecSet(u,neg_one);CHKERRQ(ierr);
+  ierr = MatMult(A,u,b);CHKERRQ(ierr);
+//  for (ROW=rstart;ROW<rend;ROW++){
+//    if (ROW==0) {
+//      val=1.0;
+//      ierr = VecSetValues(b,1,&ROW,&val, INSERT_VALUES);
+//    }
+//    else {
+//      val=0.0;
+//      ierr = VecSetValues(b,1,&ROW,&val, INSERT_VALUES);
+//    }
+//  }
+//
+//  ierr =  VecAssemblyBegin(b); CHKERRQ(ierr);
+//  ierr =  VecAssemblyEnd(b); CHKERRQ(ierr);
 
-  ierr =  VecAssemblyBegin(b); CHKERRQ(ierr);
-  ierr =  VecAssemblyEnd(b); CHKERRQ(ierr);
 //  ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,	PETSC_VIEWER_ASCII_MATLAB  );CHKERRQ(ierr);
 //  ierr = VecView(b,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -495,13 +496,17 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
    /*
       Create linear solver context
    */
+
+  ierr = MatCreateNormalHermitian(A,&NormalEq);CHKERRQ(ierr);
+    ierr = MatSetUp(NormalEq);CHKERRQ(ierr);
+    ierr = MatMultHermitianTranspose(A,b,Ab);CHKERRQ(ierr);
    ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
 
    /*
       Set operators. Here the matrix that defines the linear system
       also serves as the preconditioning matrix.
    */
-   ierr = KSPSetOperators(ksp,G ,G);CHKERRQ(ierr);
+   ierr = KSPSetOperators(ksp,NormalEq,NormalEq);CHKERRQ(ierr);
    /*
        Set linear solver defaults for this problem (optional).
        - By extracting the KSP and PC contexts from the KSP context,
@@ -513,8 +518,9 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
     */
 //    ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
 //    ierr = PCSetType(pc,PCJACOBI);CHKERRQ(ierr);
-    ierr = KSPSetTolerances(ksp,tol,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);CHKERRQ(ierr);
-
+//    ierr = KSPSetTolerances(ksp,tol,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);CHKERRQ(ierr);
+//   KSPSetType(ksp,KSPCGNE);
+   KSPSetInitialGuessNonzero(ksp,PETSC_TRUE);
     /*
       Set runtime options, e.g.,
           -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
@@ -530,9 +536,10 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
     /*
        Solve linear system
     */
-//    KSPSetInitialGuessNonzero(ksp,PETSC_TRUE);
-    ierr = KSPSolve(ksp,b,x);CHKERRQ(ierr);
 
+
+    ierr = KSPSolve(ksp,Ab,x);CHKERRQ(ierr);
+//    ierr = VecView(x,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
     /*
        View solver info; we could instead use the option -ksp_view to
        print this info to the screen at the conclusion of KSPSolve().
@@ -544,13 +551,13 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
      /*
         Check the error
      */
-//    ierr = VecView(x,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-//     ierr = VecAXPY(x,neg_one,u);CHKERRQ(ierr);
-//     ierr = VecNorm(x,NORM_2,&norm);CHKERRQ(ierr);
-//     ierr = KSPGetIterationNumber(ksp,&its);CHKERRQ(ierr);
-//       if (norm > tol) {
-//       ierr = PetscPrintf(PETSC_COMM_WORLD,"Norm of error %g, Iterations %D\n",(double)norm,its);CHKERRQ(ierr);
-//       }
+
+     ierr = VecAXPY(x,neg_one,u);CHKERRQ(ierr);
+     ierr = VecNorm(x,NORM_2,&norm);CHKERRQ(ierr);
+     ierr = KSPGetIterationNumber(ksp,&its);CHKERRQ(ierr);
+       if (norm > tol) {
+       ierr = PetscPrintf(PETSC_COMM_WORLD,"Norm of error %g, Iterations %D\n",(double)norm,its);CHKERRQ(ierr);
+       }
 
 
 }
@@ -604,9 +611,10 @@ PetscErrorCode cMasterMatrix::destruction(){
     Free work space.  All PETSc objects should be destroyed when they
     are no longer needed.
   */
-  
-  ierr = VecDestroy(&x);CHKERRQ(ierr);
-  ierr = VecDestroy(&b);CHKERRQ(ierr); ierr = MatDestroy(&G);CHKERRQ(ierr);
+	ierr = VecDestroy(&u);CHKERRQ(ierr);
+  ierr = VecDestroy(&x);CHKERRQ(ierr); ierr = VecDestroy(&Ab);CHKERRQ(ierr);
+  ierr = VecDestroy(&b);CHKERRQ(ierr); ierr = MatDestroy(&A);CHKERRQ(ierr);
+  ierr = MatDestroy(&NormalEq);CHKERRQ(ierr);
   ierr = KSPDestroy(&ksp);CHKERRQ(ierr);
-  
+  ierr = PetscViewerDestroy(&viewer);CHKERRQ(ierr);
 }

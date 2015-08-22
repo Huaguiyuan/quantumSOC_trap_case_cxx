@@ -6,18 +6,18 @@
 #include <assert.h>
 #include <math.h>
 #include <cmath> 
-//#include <ctgmath>
 using namespace std;
 const PetscInt __MAXNOZEROS__ = 1000; // This is the max number in a row. Need to check if it is large enough...
 
 class cMasterMatrix{
 private:
-  Vec            b,u;          /* RHS, test_exact solutions */
-  Mat            G;                /* linear system matrix */
+  Vec            b,u,Ab;          	   /* RHS, test_exact solutions */
+  Mat            A,NormalEq;         /* linear system matrix, and normal equation */
   KSP            ksp;              /* linear solver context */
   PC             pc;               /* preconditioner context */
-  PetscReal      norm,tol;  /* norm of solution error */
+  PetscReal      norm,tol;  	   /* norm of solution error */
   PetscViewer    viewer;
+  KSPConvergedReason reason;
   PetscInt       ROW,COLUMN,m,n,p,q,k,r,c,its,rstart,rend,nlocal,col[__MAXNOZEROS__];
   PetscScalar    value[__MAXNOZEROS__], one, neg_one, val;
 protected:

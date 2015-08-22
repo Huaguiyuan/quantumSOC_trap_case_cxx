@@ -3,10 +3,14 @@
 make SteadyState
 
 if [ "$?" = "0" ]; then
+    # === OPTIONS FOR GMRES Ax=b approach ===
     # ./$exe   -pc_type jacobi -ksp_monitor_short #-ksp_plot_eigenvalues_explicitly -draw_pause -1 #-ksp_monitor_singular_value -ksp_monitor_true_residual
-mpirun -n 6 ./SteadyState  -ksp_monitor_short   -pc_type jacobi   -ksp_type gmres -ksp_gmres_restart 1500  -ksp_gmres_modifiedgramschmidt -ksp_plot_eigenvalues_explicitly -draw_pause -1 
+    # mpirun -n 6 ./SteadyState  -ksp_monitor_short   -pc_type jacobi   -ksp_type gmres -ksp_gmres_restart 1500  -ksp_gmres_modifiedgramschmidt -ksp_plot_eigenvalues_explicitly -draw_pause -1 -malloc_dump
     #> screen_log.OUT
-#        mpirun -n 6 ./$exe -ksp_type bicg -pc_type jacobi  -ksp_monitor_short #-draw_pause -1 #-mat_view draw 
+    #        mpirun -n 6 ./$exe -ksp_type bicg -pc_type jacobi  -ksp_monitor_short #-draw_pause -1 #-mat_view draw 
+    # === OPTIONS FOR CG NORMAL EQUATION A^{\dagger}Ax=A^{\dagger}b approach ===
+    mpirun -n 6 ./SteadyState  -ksp_monitor_short -ksp_type cgne -ksp_cg_type Hermitian -ksp_converged_reason -ksp_rtol 1.e-15  #-pc_type jacobi
+    #-malloc_dump 
 else
     rm $exe
     exit 1
