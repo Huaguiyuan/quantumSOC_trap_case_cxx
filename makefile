@@ -11,8 +11,8 @@ CLEANFILES       = rhs.vtk solution.vtk
 NP               = 1
 OBJ=$(EXAMPLESC:.cpp=.o)
 
-include ${PETSC_DIR}/conf/variables
-include ${PETSC_DIR}/conf/rules
+include ${PETSC_DIR}/lib/petsc/conf/variables
+include ${PETSC_DIR}/lib/petsc/conf/rules
 
 EXE = SteadyState
 ${EXE}: ${OBJ}  chkopts

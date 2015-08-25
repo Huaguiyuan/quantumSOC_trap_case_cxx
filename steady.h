@@ -41,6 +41,7 @@ public:
   PetscErrorCode viewMatrix();
   PetscErrorCode MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
   		int ct, int mt, int nt, int pt, int qt);
-  PetscErrorCode observables();
+  PetscErrorCode observables_photon();
+  PetscErrorCode observables_oscillator();
 };
 #endif
