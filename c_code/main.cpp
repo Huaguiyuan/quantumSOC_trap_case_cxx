@@ -34,7 +34,7 @@ void initialize();
   PetscErrorCode assemblance();
   PetscErrorCode seek_steady_state();
   PetscErrorCode viewMatrix();
-  PetscErrorCode MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
+  void MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
   		int ct, int mt, int nt, int pt, int qt,int N, int Q);
   PetscErrorCode observables_photon();
   PetscErrorCode observables_oscillator();
@@ -674,7 +674,7 @@ int main(int argc,char **args){
 }
 
 
-PetscErrorCode MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
+void MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
 					int ct, int mt, int nt, int pt, int qt,int N, int Q){
   if (PetscAbsScalar(_val_) != 0 ) {
     col[nonzeros] = compute_kt(ct,mt,nt,pt,qt, N, Q);
