@@ -1,5 +1,5 @@
-N		1
-Q		1
+N		10
+Q		5
 omega		0.5
 qr		0.22
 Omega		5
