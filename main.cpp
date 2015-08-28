@@ -46,7 +46,8 @@ int main(int argc,char **args){
   GMatrix.construction();
   GMatrix.seek_steady_state();
   GMatrix.viewMatrix();
-  GMatrix.observables();
+  GMatrix.observables_photon();
+  GMatrix.observables_oscillator();
   /*
      Always call PetscFinalize() before exiting a program.  This routine
        - finalizes the PETSc libraries as well as MPI

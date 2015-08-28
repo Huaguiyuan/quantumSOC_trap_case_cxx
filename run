@@ -5,7 +5,18 @@ make SteadyState
 if [ "$?" = "0" ]; then
     # === OPTIONS FOR GMRES Ax=b approach ===
     # ./$exe   -pc_type jacobi -ksp_monitor_short #-ksp_plot_eigenvalues_explicitly -draw_pause -1 #-ksp_monitor_singular_value -ksp_monitor_true_residual
+<<<<<<< HEAD
     # mpirun -n 6 ./SteadyState  -ksp_monitor_short   -pc_type jacobi   -ksp_type gmres -ksp_gmres_restart 1500  -ksp_gmres_modifiedgramschmidt -ksp_plot_eigenvalues_explicitly -draw_pause -1 -malloc_dump
+=======
+    mpirun -n 6 ./SteadyState  -ksp_monitor_short -ksp_type gmres -ksp_gmres_restart 5000  -ksp_converged_reason -pc_type jacobi  #-pc_gamg_sym_graph true 
+    #-malloc_log
+    
+    #-ksp_gmres_modifiedgramschmidt
+    #-log_summary
+    # -malloc_dump
+    #-log_summary
+    #-ksp_plot_eigenvalues_explicitly -draw_pause -1 
+>>>>>>> rGMRES_preconditioner
     #> screen_log.OUT
     #        mpirun -n 6 ./$exe -ksp_type bicg -pc_type jacobi  -ksp_monitor_short #-draw_pause -1 #-mat_view draw 
     # === OPTIONS FOR CG NORMAL EQUATION A^{\dagger}Ax=A^{\dagger}b approach ===

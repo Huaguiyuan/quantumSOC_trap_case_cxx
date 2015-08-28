@@ -563,7 +563,7 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
 }
 
 
-PetscErrorCode cMasterMatrix::observables(){
+PetscErrorCode cMasterMatrix::observables_photon(){
 	int nonzeros = 0;double phtn_n_r, phtn_fluc_r, tmpdiagrho;
 	cout.precision(16);
 	phtn_n_r = 0;phtn_fluc_r = 0;tmpdiagrho = 0;
@@ -578,7 +578,7 @@ PetscErrorCode cMasterMatrix::observables(){
 //					cerr << "check the convergence, the imaginary part is intolerably large, stopping now... " << endl;
 //					exit(1);
 //				}
-				tmpdiagrho += PetscRealPart(value[nonzeros]);
+//				tmpdiagrho += PetscRealPart(value[nonzeros]);
 				phtn_n_r += PetscRealPart(value[nonzeros])*m; // checked the imaginary part is exceedingly small as it should be.
 				phtn_fluc_r += PetscRealPart(value[nonzeros])*m*m;
 				nonzeros++;
@@ -588,11 +588,55 @@ PetscErrorCode cMasterMatrix::observables(){
 //	cout << "rank " << rank << " has photon number: " << phtn_n_r << " photon fluc: " << phtn_fluc_r << endl;
 	MPI_Reduce(&phtn_n_r, &PhotonNumber, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 	MPI_Reduce(&phtn_fluc_r, &PhotonFluc, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
-	MPI_Reduce(&tmpdiagrho, &tmpRhoDiagonal, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+//	MPI_Reduce(&tmpdiagrho, &tmpRhoDiagonal, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 	if (rank == 0) {
 		PhotonFluc = (PhotonFluc - PhotonNumber*PhotonNumber)/PhotonNumber; // normalization to 1 for coherent state at root
 	cout << "photon number is " << PhotonNumber  << '\t'
 			<< "photon number fluctuation is " << PhotonFluc << endl;
+//	cout << "sum of diag " << tmpRhoDiagonal << endl;
+	}
+
+//	for (int jtmp = 0; jtmp < size; ++jtmp) {
+//		if (jtmp == rank) {
+//			for (int itmp = 0; itmp < nonzeros; itmp++) {
+////				if (col[itmp] !=0){
+//					cout << "rank " << rank << " has " << value[itmp] << '\t' << "and photon number is " << col[itmp] << endl;
+//			}
+//		}
+//	}
+
+}
+
+PetscErrorCode cMasterMatrix::observables_oscillator(){
+	int nonzeros = 0;double phtn_n_r, phtn_fluc_r, tmpdiagrho;
+	cout.precision(16);
+	phtn_n_r = 0;phtn_fluc_r = 0;tmpdiagrho = 0;
+	for (ROW=rstart;ROW<rend;ROW++){
+		block(ROW, r, m, n, p, q);
+		if (r==0 || r==3){ // Getting diagonal elements of rho_up_up and rho_dn_dn for all photon and orbital numbers
+			if (m==n && p==q){
+				ierr = VecGetValues(x,1,&ROW,&value[nonzeros]);CHKERRQ(ierr);
+				col[nonzeros] = p; // saved for average oscillator number computation
+//				cout << value[nonzeros] << '\t' << r+1 << '\t' << m << '\t' << p << endl; //
+//				if (PetscImaginaryPart(value[nonzeros]) > 1.e-5) {
+//					cerr << "check the convergence, the imaginary part is intolerably large, stopping now... " << endl;
+//					exit(1);
+//				}
+//				tmpdiagrho += PetscRealPart(value[nonzeros]);
+				phtn_n_r += PetscRealPart(value[nonzeros])*p; // checked the imaginary part is exceedingly small as it should be.
+				phtn_fluc_r += PetscRealPart(value[nonzeros])*p*p;
+				nonzeros++;
+			}
+		}
+	}
+//	cout << "rank " << rank << " has photon number: " << phtn_n_r << " photon fluc: " << phtn_fluc_r << endl;
+	MPI_Reduce(&phtn_n_r, &PhotonNumber, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+	MPI_Reduce(&phtn_fluc_r, &PhotonFluc, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+//	MPI_Reduce(&tmpdiagrho, &tmpRhoDiagonal, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+	if (rank == 0) {
+		PhotonFluc = (PhotonFluc - PhotonNumber*PhotonNumber)/PhotonNumber; // normalization to 1 for coherent state at root
+	cout << "orbital number is " << PhotonNumber  << '\t'
+			<< "orbital number fluctuation is " << PhotonFluc << endl;
 //	cout << "sum of diag " << tmpRhoDiagonal << endl;
 	}
 
