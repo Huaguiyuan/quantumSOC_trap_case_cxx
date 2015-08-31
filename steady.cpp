@@ -72,27 +72,17 @@ int cMasterMatrix::compute_kt(int ct, int mt, int nt, int pt, int qt){
   return ct*(N+1)*(N+1)*(Q+1)*(Q+1)+mt*(N+1)*(Q+1)*(Q+1)+nt*(Q+1)*(Q+1)+pt*(Q+1)+qt;
 }
 
+PetscErrorCode cMasterMatrix::preallocation(){
+// The following set up is not needed for pre-allocated matrix. --> debugging purpose only.
+//	  ierr = MatSetFromOptions(G);CHKERRQ(ierr);
+//	  ierr = MatSetUp(G);CHKERRQ(ierr);
+
+	ierr = MatMPIAIJSetPreallocation(G,__MAXNOZEROS__,NULL,__MAXNOZEROS__,NULL);CHKERRQ(ierr);
+	return ierr;
+}
+
+
 PetscErrorCode cMasterMatrix::construction(){
-  
-  /*
-    Create vectors.  Note that we form 1 vector from scratch and
-    then duplicate as needed. For this simple case let PETSc decide how
-    many elements of the vector are stored on each processor. The second
-    argument to VecSetSizes() below causes PETSc to decide.
-  */
-  ierr = VecCreate(PETSC_COMM_WORLD,&x);CHKERRQ(ierr);
-  ierr = VecSetSizes(x,PETSC_DECIDE,DIM);CHKERRQ(ierr);
-  ierr = VecSetFromOptions(x);CHKERRQ(ierr);
-  ierr = VecDuplicate(x,&b);CHKERRQ(ierr);
-  ierr = VecDuplicate(x,&u);CHKERRQ(ierr);
-  
-  /* Identify the starting and ending mesh points on each
-     processor for the interior part of the mesh. We let PETSc decide
-     above. */
-  
-  ierr = VecGetOwnershipRange(x,&rstart,&rend);CHKERRQ(ierr);
-  ierr = VecGetLocalSize(x,&nlocal);CHKERRQ(ierr);
-  
   /*
     Create matrix.  When using MatCreate(), the matrix format can
     be specified at runtime.
@@ -100,43 +90,61 @@ PetscErrorCode cMasterMatrix::construction(){
     Performance tuning note:  For problems of substantial size,
     preallocation of matrix memory is crucial for attaining good
     performance. See the matrix chapter of the users manual for details.
-    
-    We pass in nlocal as the "local" size of the matrix to force it
-    to have the same parallel layout as the vector created above.
+
   */
   ierr = MatCreate(PETSC_COMM_WORLD,&G);CHKERRQ(ierr);
-  ierr = MatSetSizes(G,nlocal,nlocal,DIM,DIM);CHKERRQ(ierr);
-  ierr = MatSetFromOptions(G);CHKERRQ(ierr);
-  ierr = MatSetUp(G);CHKERRQ(ierr);
-  
-  assemblance();
+  ierr = MatSetType(G,MATMPIAIJ);CHKERRQ(ierr);
+  ierr = MatSetSizes(G,PETSC_DECIDE,PETSC_DECIDE,DIM,DIM);CHKERRQ(ierr);
+  ierr = preallocation();CHKERRQ(ierr);
+  ierr = MatGetOwnershipRange(G,&rstart,&rend);CHKERRQ(ierr);
+  ierr = MatGetLocalSize(G,&nlocal, NULL);CHKERRQ(ierr);
+
+  ierr = assemblance();CHKERRQ(ierr);
 
   ierr = MatAssemblyBegin(G,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = MatAssemblyEnd(G,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-
   // Modify matrix and impose Trace of \rho = 1 as a constraint explicitly.
-  PetscInt val; val = 0;
-  ierr = MatZeroRows(G, 1, &val, 0.0, 0, 0);CHKERRQ(ierr); // This has to be done AFTER matrix final assembly by petsc
+//  PetscInt val0; val0 = 0;
+//  ierr = MatZeroRows(G, 1, &val0, 0.0, 0, 0);CHKERRQ(ierr); // This has to be done AFTER matrix final assembly by petsc
+  ierr = MatSetOption(G, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);CHKERRQ(ierr);
+  PetscInt* col0;
+  PetscScalar *value0;
+  ierr = PetscMalloc1(2*(N+1)*(Q+1),&col0);CHKERRQ(ierr);
+  ierr = PetscMalloc1(2*(N+1)*(Q+1),&value0);CHKERRQ(ierr);
   if (rstart == 0) {
     int nonzeros = 0;
     for (m=0;m<=N;m++){
       n = m;
       for (p=0;p<=Q;p++){
 	q = p;
-	col[nonzeros] = compute_kt(0,m,n,p,q); // rho_up_up
-	value[nonzeros] = 1.0;
+	col0[nonzeros] = compute_kt(0,m,n,p,q); // rho_up_up
+	value0[nonzeros] = 1.0;
 	nonzeros ++;
-	col[nonzeros] = compute_kt(3,m,n,p,q); // rho_dn_dn
-	value[nonzeros] = 1.0;
+	col0[nonzeros] = compute_kt(3,m,n,p,q); // rho_dn_dn
+	value0[nonzeros] = 1.0;
 	nonzeros ++;
       }
     }
-    ierr   = MatSetValues(G,1,&rstart,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
+//    cout << nonzeros << endl;
+
+    ierr = MatSetValues(G,1,&rstart,nonzeros,col0,value0,INSERT_VALUES);CHKERRQ(ierr);
   }
-  /* Re-Assemble the matrix */
+  ierr = PetscFree(col0);ierr = PetscFree(value0);
+//  /* Re-Assemble the matrix */
   ierr = MatAssemblyBegin(G,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(G,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);    
-  
+  ierr = MatAssemblyEnd(G,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatSetOption(G, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);CHKERRQ(ierr);
+  /*
+      Create vectors.  Note that we form 1 vector from scratch and
+      then duplicate as needed. For this simple case let PETSc decide how
+      many elements of the vector are stored on each processor.
+    */
+    ierr = VecCreate(PETSC_COMM_WORLD,&x);CHKERRQ(ierr);
+    ierr = VecSetSizes(x,nlocal,DIM);CHKERRQ(ierr);
+    ierr = VecSetFromOptions(x);CHKERRQ(ierr);
+    ierr = VecDuplicate(x,&b);CHKERRQ(ierr);
+    ierr = VecDuplicate(x,&u);CHKERRQ(ierr);
+  return ierr;
 }
 
 
@@ -156,6 +164,7 @@ PetscErrorCode cMasterMatrix::viewMatrix(){
 //	  ierr = MatView(G,	viewer );CHKERRQ(ierr);
 //	  ierr = VecView(b,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
 //    ierr = VecView(x,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
+	return ierr;
 }
 
 PetscErrorCode cMasterMatrix::MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
@@ -163,8 +172,10 @@ PetscErrorCode cMasterMatrix::MatInsert(PetscScalar _val_, int &nonzeros, PetscI
   if (PetscAbsScalar(_val_) != 0 ) {
     col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);
     value[nonzeros] = _val_;
+//    cout << nonzeros << endl;
     nonzeros ++;
   }
+  return ierr;
 }
 
 PetscErrorCode cMasterMatrix::assemblance(){
@@ -186,6 +197,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
 	  block(ROW,r,m,n,p,q);
     switch (r) {
     case 0:
+    	if (ROW != 0) { // Impose Tr[\rho]=1 condition at the first row later.
     	// MUU block
     	ct = r; mt = m; nt = n; pt = p; qt = q;
 	_val_ = ((p+0.5)*omega+delta)/PETSC_i-((q+0.5)*omega+delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
@@ -254,6 +266,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
         	<<  __MAXNOZEROS__ <<" const arrays. Try increasing the max number in steady.h" << endl;exit(1);
         }
         ierr   = MatSetValues(G,1,&ROW,nonzeros,col,value,INSERT_VALUES);CHKERRQ(ierr);
+    	}
     	break;
     case 1:
     	// MUD block
@@ -465,6 +478,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	break;
     }
   }
+  return ierr;
 }
 
 
@@ -552,7 +566,7 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
 //       ierr = PetscPrintf(PETSC_COMM_WORLD,"Norm of error %g, Iterations %D\n",(double)norm,its);CHKERRQ(ierr);
 //       }
 
-
+    return ierr;
 }
 
 
@@ -560,20 +574,21 @@ PetscErrorCode cMasterMatrix::observables_photon(){
 	int nonzeros = 0;double phtn_n_r, phtn_fluc_r, tmpdiagrho;
 	cout.precision(16);
 	phtn_n_r = 0;phtn_fluc_r = 0;tmpdiagrho = 0;
+	PetscScalar value0;
 	for (ROW=rstart;ROW<rend;ROW++){
 		block(ROW, r, m, n, p, q);
 		if (r==0 || r==3){ // Getting diagonal elements of rho_up_up and rho_dn_dn for all photon and orbital numbers
 			if (m==n && p==q){
-				ierr = VecGetValues(x,1,&ROW,&value[nonzeros]);CHKERRQ(ierr);
-				col[nonzeros] = m; // saved for photon number computation
+				ierr = VecGetValues(x,1,&ROW,&value0);CHKERRQ(ierr);
+//				col[nonzeros] = m; // saved for photon number computation
 //				cout << value[nonzeros] << '\t' << r+1 << '\t' << m << '\t' << p << endl; //
 //				if (PetscImaginaryPart(value[nonzeros]) > 1.e-5) {
 //					cerr << "check the convergence, the imaginary part is intolerably large, stopping now... " << endl;
 //					exit(1);
 //				}
-//				tmpdiagrho += PetscRealPart(value[nonzeros]);
-				phtn_n_r += PetscRealPart(value[nonzeros])*m; // checked the imaginary part is exceedingly small as it should be.
-				phtn_fluc_r += PetscRealPart(value[nonzeros])*m*m;
+//				tmpdiagrho += PetscRealPart(value0[nonzeros]);
+				phtn_n_r += PetscRealPart(value0)*m; // checked the imaginary part is exceedingly small as it should be.
+				phtn_fluc_r += PetscRealPart(value0)*m*m;
 				nonzeros++;
 			}
 		}
@@ -597,27 +612,28 @@ PetscErrorCode cMasterMatrix::observables_photon(){
 //			}
 //		}
 //	}
-
+	return ierr;
 }
 
 PetscErrorCode cMasterMatrix::observables_oscillator(){
 	int nonzeros = 0;double phtn_n_r, phtn_fluc_r, tmpdiagrho;
 	cout.precision(16);
 	phtn_n_r = 0;phtn_fluc_r = 0;tmpdiagrho = 0;
+	PetscScalar value0;
 	for (ROW=rstart;ROW<rend;ROW++){
 		block(ROW, r, m, n, p, q);
 		if (r==0 || r==3){ // Getting diagonal elements of rho_up_up and rho_dn_dn for all photon and orbital numbers
 			if (m==n && p==q){
-				ierr = VecGetValues(x,1,&ROW,&value[nonzeros]);CHKERRQ(ierr);
-				col[nonzeros] = p; // saved for average oscillator number computation
+				ierr = VecGetValues(x,1,&ROW,&value0);CHKERRQ(ierr);
+//				col[nonzeros] = p; // saved for average oscillator number computation
 //				cout << value[nonzeros] << '\t' << r+1 << '\t' << m << '\t' << p << endl; //
 //				if (PetscImaginaryPart(value[nonzeros]) > 1.e-5) {
 //					cerr << "check the convergence, the imaginary part is intolerably large, stopping now... " << endl;
 //					exit(1);
 //				}
 //				tmpdiagrho += PetscRealPart(value[nonzeros]);
-				phtn_n_r += PetscRealPart(value[nonzeros])*p; // checked the imaginary part is exceedingly small as it should be.
-				phtn_fluc_r += PetscRealPart(value[nonzeros])*p*p;
+				phtn_n_r += PetscRealPart(value0)*p; // checked the imaginary part is exceedingly small as it should be.
+				phtn_fluc_r += PetscRealPart(value0)*p*p;
 				nonzeros++;
 			}
 		}
@@ -641,7 +657,7 @@ PetscErrorCode cMasterMatrix::observables_oscillator(){
 //			}
 //		}
 //	}
-
+	return ierr;
 }
 PetscErrorCode cMasterMatrix::destruction(){
   /*
@@ -652,5 +668,5 @@ PetscErrorCode cMasterMatrix::destruction(){
   ierr = VecDestroy(&x);CHKERRQ(ierr);
   ierr = VecDestroy(&b);CHKERRQ(ierr); ierr = MatDestroy(&G);CHKERRQ(ierr);
   ierr = KSPDestroy(&ksp);CHKERRQ(ierr);
-  
+  return ierr;
 }

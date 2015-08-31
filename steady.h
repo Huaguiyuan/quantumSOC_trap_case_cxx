@@ -8,7 +8,7 @@
 #include <cmath> 
 //#include <ctgmath>
 using namespace std;
-const PetscInt __MAXNOZEROS__ = 1000; // This is the max number in a row. Need to check if it is large enough...
+const PetscInt __MAXNOZEROS__ = 23; // This is the max number in a row --> theoretically largest recursion relation index given by the master equation.
 
 class cMasterMatrix{
 private:
@@ -36,6 +36,7 @@ public:
 //  void zombie_call_of_block(){block(i,r,c,m,n,p,q);}
   int compute_kt(int, int, int, int, int);
   PetscErrorCode construction();
+  PetscErrorCode preallocation();
   PetscErrorCode assemblance();
   PetscErrorCode seek_steady_state();
   PetscErrorCode viewMatrix();

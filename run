@@ -4,13 +4,13 @@ make SteadyState
 
 if [ "$?" = "0" ]; then
     # ./$exe   -pc_type jacobi -ksp_monitor_short #-ksp_plot_eigenvalues_explicitly -draw_pause -1 #-ksp_monitor_singular_value -ksp_monitor_true_residual
-    mpirun -n 6 ./SteadyState  -ksp_monitor_short -ksp_type gmres -ksp_gmres_restart 5000  -ksp_converged_reason -pc_type jacobi  #-pc_gamg_sym_graph true 
+    mpirun -n 6 ./SteadyState  -ksp_type gmres -ksp_gmres_restart 3000  -ksp_converged_reason -pc_type jacobi -log_summary -ksp_monitor_short
+    #-pc_gamg_sym_graph true 
     #-malloc_log
     
     #-ksp_gmres_modifiedgramschmidt
     #-log_summary
-    # -malloc_dump
-    #-log_summary
+    # -malloc_log
     #-ksp_plot_eigenvalues_explicitly -draw_pause -1 
     #> screen_log.OUT
 #        mpirun -n 6 ./$exe -ksp_type bicg -pc_type jacobi  -ksp_monitor_short #-draw_pause -1 #-mat_view draw 
