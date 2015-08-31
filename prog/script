@@ -1,7 +1,7 @@
 #!/bin/bash
 
-Narray=$(awk 'BEGIN{for(i=1;i<=10;i+=1)print i}')
-Qarray=$(awk 'BEGIN{for(i=1;i<=10;i+=1)print i}')
+Narray=$(awk 'BEGIN{for(i=15;i>=1;i-=1)print i}')
+Qarray=$(awk 'BEGIN{for(i=15;i>=1;i-=1)print i}')
 for N in $Narray
 do
     mkdir N_$N
@@ -10,11 +10,11 @@ do
     do
 	mkdir Q_$Q
 	cd Q_$Q
-	cp /home/ld7/workspace/quantumSOC_trap_case_cxx/input.txt .
-	ln -s /home/ld7/workspace/quantumSOC_trap_case_cxx/SteadyState .
+	cp /home1/02946/ld7/quantumSOC_trap_case_cxx/input.txt .
+	ln -s /home1/02946/ld7/quantumSOC_trap_case_cxx/SteadyState .
 	sed -i '1s/.*/N '$N'/' input.txt
 	sed -i '2s/.*/Q '$Q'/' input.txt
-	mpirun -n 6 ./SteadyState  -ksp_monitor_short   -pc_type jacobi   -ksp_type gmres -ksp_gmres_restart 300 > screen_log.OUT
+	ibrun ./SteadyState  -ksp_monitor_short   -pc_type jacobi   -ksp_type dgmres -ksp_gmres_restart 5000 > screen_log.OUT
 	echo "N=" $N "Q=" $Q
 	cd ..
     done
