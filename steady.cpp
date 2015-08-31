@@ -48,7 +48,11 @@ void cMasterMatrix::initialize(){
 //  N=2;
 //  Q=1;
 	//  tol=1.e-11;
-	DIM=4*(N+1)*(N+1)*(Q+1)*(Q+1);
+	DIM   = 4*(N+1)*(N+1)*(Q+1)*(Q+1);
+	tDIM1 = (N+1)*(N+1)*(Q+1)*(Q+1);
+	tDIM2 = (N+1)*(Q+1)*(Q+1);
+	tDIM3 = (Q+1)*(Q+1);
+	tDIM4 = (Q+1);
   one =1.0;neg_one=-1.0;
 }
 
@@ -60,16 +64,16 @@ void cMasterMatrix::block(int irow, int&r, int&m, int&n, int&p, int&q){
     that links the correspondance between the two.
   */
   int k;
-  r = floor((irow)/((N+1)*(N+1)*(Q+1)*(Q+1)));
-  k = irow-r*(N+1)*(N+1)*(Q+1)*(Q+1);
-  m = floor((k)/((N+1)*(Q+1)*(Q+1)));
-  n = floor((k-m*((N+1)*(Q+1)*(Q+1)))/((Q+1)*(Q+1)));
-  p = floor((k-m*((N+1)*(Q+1)*(Q+1))-n*(Q+1)*(Q+1))/(Q+1));
-  q = k-(m*(N+1)*(Q+1)*(Q+1)+n*(Q+1)*(Q+1)+p*(Q+1));
+  r = floor(irow/tDIM1);
+  k = irow-r*tDIM1;
+  m = floor(k/tDIM2);
+  n = floor((k-m*tDIM2)/tDIM3);
+  p = floor((k-m*tDIM2-n*tDIM3)/tDIM4);
+  q = k-(m*tDIM2+n*tDIM3+p*tDIM4);
 }
 
 int cMasterMatrix::compute_kt(int ct, int mt, int nt, int pt, int qt){
-  return ct*(N+1)*(N+1)*(Q+1)*(Q+1)+mt*(N+1)*(Q+1)*(Q+1)+nt*(Q+1)*(Q+1)+pt*(Q+1)+qt;
+  return ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;
 }
 
 PetscErrorCode cMasterMatrix::preallocation(){
@@ -77,7 +81,9 @@ PetscErrorCode cMasterMatrix::preallocation(){
 //	  ierr = MatSetFromOptions(G);CHKERRQ(ierr);
 //	  ierr = MatSetUp(G);CHKERRQ(ierr);
 
-	ierr = MatMPIAIJSetPreallocation(G,__MAXNOZEROS__,NULL,__MAXNOZEROS__,NULL);CHKERRQ(ierr);
+//	ierr = MatMPIAIJSetPreallocation(G,__MAXNOZEROS__,NULL,__MAXNOZEROS__,NULL);CHKERRQ(ierr);
+
+	ierr = MatMPIAIJSetPreallocation(G,10,NULL,10,NULL);CHKERRQ(ierr);
 	return ierr;
 }
 
@@ -167,15 +173,15 @@ PetscErrorCode cMasterMatrix::viewMatrix(){
 	return ierr;
 }
 
-PetscErrorCode cMasterMatrix::MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
+void cMasterMatrix::MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
 					int ct, int mt, int nt, int pt, int qt){
-  if (PetscAbsScalar(_val_) != 0 ) {
+//  if (PetscAbsScalar(_val_) != 0 ) {
     col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);
     value[nonzeros] = _val_;
 //    cout << nonzeros << endl;
     nonzeros ++;
-  }
-  return ierr;
+//  }
+
 }
 
 PetscErrorCode cMasterMatrix::assemblance(){

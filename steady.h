@@ -22,7 +22,7 @@ private:
   PetscScalar    value[__MAXNOZEROS__], one, neg_one, val;
 protected:
   PetscErrorCode ierr;
-  PetscInt       N,Q,DIM;
+  PetscInt       N,Q,DIM,tDIM1,tDIM2,tDIM3,tDIM4;
   PetscScalar    omega, qr,Omega,delta,varepsilon,delta_c,kappa;
   Vec            x;          /* steady state solution */
   PetscMPIInt      rank, size;
@@ -40,7 +40,7 @@ public:
   PetscErrorCode assemblance();
   PetscErrorCode seek_steady_state();
   PetscErrorCode viewMatrix();
-  PetscErrorCode MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
+  void MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
   		int ct, int mt, int nt, int pt, int qt);
   PetscErrorCode observables_photon();
   PetscErrorCode observables_oscillator();
