@@ -173,16 +173,14 @@ PetscErrorCode cMasterMatrix::viewMatrix(){
 	return ierr;
 }
 
-void cMasterMatrix::MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
-					int ct, int mt, int nt, int pt, int qt){
-//  if (PetscAbsScalar(_val_) != 0 ) {
-    col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);
-    value[nonzeros] = _val_;
-//    cout << nonzeros << endl;
-    nonzeros ++;
-//  }
-
-}
+//void cMasterMatrix::MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
+//					int ct, int mt, int nt, int pt, int qt){
+////  if (PetscAbsScalar(_val_) != 0 ) {
+//    col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
+////    cout << nonzeros << endl;
+////  }
+//
+//}
 
 PetscErrorCode cMasterMatrix::assemblance(){
   /*
@@ -207,51 +205,51 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	// MUU block
     	ct = r; mt = m; nt = n; pt = p; qt = q;
 	_val_ = ((p+0.5)*omega+delta)/PETSC_i-((q+0.5)*omega+delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
-	MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+	col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
 	  _val_ = -qr/sqrt(2)*sqrt(p+1);
-	  MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+	  col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p-1; qt = q;
     	if (pt >= 0) {
 	  _val_ =qr/sqrt(2)*sqrt(p);
-	  MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+	  col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q+1;
     	if (qt <= Q) {
 	  _val_ = -qr/sqrt(2)*sqrt(q+1);
-	  MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+	  col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q-1;
     	if (qt >= 0) {
 	  _val_ = qr/sqrt(2)*sqrt(q);
-	  MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+	  col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
     	if (mt <= N && nt <= N) {
 	  _val_ = kappa*2*sqrt(m+1)*sqrt(n+1);
-	  MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+	  col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n; pt = p; qt = q;
     	if (mt <= N) {
 	  _val_ = -varepsilon*sqrt(m+1);
-	  MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+	  col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m-1; nt = n; pt = p; qt = q;
     	if (mt >= 0) {
 	  _val_ = varepsilon*sqrt(m);
-	  MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+	  col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n+1; pt = p; qt = q;
     	if (nt <= N) {
 	  _val_ = -varepsilon*sqrt(n+1);
-	  MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+	  col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n-1; pt = p; qt = q;
     	if (nt >= 0) {
 	  _val_ = varepsilon*sqrt(n);
-	  MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+	  col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	// S1 block
     	ct = 1;mt = m; nt = n+1; pt = p; qt = q;
@@ -259,13 +257,13 @@ PetscErrorCode cMasterMatrix::assemblance(){
 	  _val_ = -Omega/2*sqrt(n+1)/PETSC_i;
 	  // TODO: potential bugs for MatView with pure imaginary number display.
 	  //    		cout << compute_kt(ct,mt,nt,pt,qt) << '\t' << PetscAbsScalar(_val_) << endl;
-	  MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+	  col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	// S2 block
     	ct = 2;mt = m+1; nt = n; pt = p; qt = q;
     	if (mt <= N) {
     		_val_ = Omega/2*sqrt(m+1)/PETSC_i;
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
         if (nonzeros > __MAXNOZEROS__){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
@@ -278,63 +276,63 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	// MUD block
     	ct = r; mt = m; nt = n; pt = p; qt = q;
 			_val_ = ((p+0.5)*omega+delta)/PETSC_i-((q+0.5)*omega-delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
-			MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+			col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
     		_val_ = -qr/sqrt(2)*sqrt(p+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p-1; qt = q;
     	if (pt >= 0) {
     		_val_ = qr/sqrt(2)*sqrt(p);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q+1;
     	if (qt <= Q) {
     		_val_ = qr/sqrt(2)*sqrt(q+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q-1;
     	if (qt >= 0) {
     		_val_ = -qr/sqrt(2)*sqrt(q);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
     	if (mt <= N && nt <= N) {
     		_val_ = kappa*2*sqrt(m+1)*sqrt(n+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n; pt = p; qt = q;
     	if (mt <= N) {
     		_val_ = -varepsilon*sqrt(m+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m-1; nt = n; pt = p; qt = q;
     	if (mt >= 0) {
     		_val_ = varepsilon*sqrt(m);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n+1; pt = p; qt = q;
     	if (nt <= N) {
     		_val_ = -varepsilon*sqrt(n+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n-1; pt = p; qt = q;
     	if (nt >= 0) {
     		_val_ = varepsilon*sqrt(n);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	// S3 block
     	ct = 0;mt = m; nt = n-1; pt = p; qt = q;
     	if (nt >= 0) {
     		_val_ = -Omega/2*sqrt(n)/PETSC_i;
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	// S4 block
     	ct = 3;mt = m+1; nt = n; pt = p; qt = q;
     	if (mt <= N) {
     		_val_ = Omega/2*sqrt(m+1)/PETSC_i;
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
         if (nonzeros > __MAXNOZEROS__){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
@@ -346,63 +344,63 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	// MDU block
     	ct = r; mt = m; nt = n; pt = p; qt = q;
 			_val_ = ((p+0.5)*omega-delta)/PETSC_i-((q+0.5)*omega+delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
-			MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+			col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
     		_val_ = qr/sqrt(2)*sqrt(p+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p-1; qt = q;
     	if (pt >= 0) {
     		_val_ = -qr/sqrt(2)*sqrt(p);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q+1;
     	if (qt <= Q) {
     		_val_ = -qr/sqrt(2)*sqrt(q+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q-1;
     	if (qt >= 0) {
     		_val_ =  qr/sqrt(2)*sqrt(q);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
     	if (mt <= N && nt <= N) {
     		_val_ = kappa*2*sqrt(m+1)*sqrt(n+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n; pt = p; qt = q;
     	if (mt <= N) {
     		_val_ = -varepsilon*sqrt(m+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m-1; nt = n; pt = p; qt = q;
     	if (mt >= 0) {
     		_val_ = varepsilon*sqrt(m);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n+1; pt = p; qt = q;
     	if (nt <= N) {
     		_val_ = -varepsilon*sqrt(n+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n-1; pt = p; qt = q;
     	if (nt >= 0) {
     		_val_ = varepsilon*sqrt(n);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	// S5 block
     	ct = 0;mt = m-1; nt = n; pt = p; qt = q;
     	if (mt >= 0) {
     		_val_ = Omega/2*sqrt(m)/PETSC_i;
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	// S6 block
     	ct = 3;mt = m; nt = n+1; pt = p; qt = q;
     	if (nt <= N) {
     		_val_ = -Omega/2*sqrt(n+1)/PETSC_i;
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
         if (nonzeros > __MAXNOZEROS__){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
@@ -414,63 +412,63 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	// MDD block
     	ct = r; mt = m; nt = n; pt = p; qt = q;
 			_val_ = ((p+0.5)*omega-delta)/PETSC_i-((q+0.5)*omega-delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
-			MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+			col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
     		_val_ = qr/sqrt(2)*sqrt(p+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p-1; qt = q;
     	if (pt >= 0) {
     		_val_ = -qr/sqrt(2)*sqrt(p);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q+1;
     	if (qt <= Q) {
     		_val_ = qr/sqrt(2)*sqrt(q+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q-1;
     	if (qt >= 0) {
     		_val_ = -qr/sqrt(2)*sqrt(q);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
     	if (mt <= N && nt <= N) {
     		_val_ = kappa*2*sqrt(m+1)*sqrt(n+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n; pt = p; qt = q;
     	if (mt <= N) {
     		_val_ = -varepsilon*sqrt(m+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m-1; nt = n; pt = p; qt = q;
     	if (mt >= 0) {
     		_val_ = varepsilon*sqrt(m);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n+1; pt = p; qt = q;
     	if (nt <= N) {
     		_val_ = -varepsilon*sqrt(n+1);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n-1; pt = p; qt = q;
     	if (nt >= 0) {
     		_val_ = varepsilon*sqrt(n);
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	// S7 block
     	ct = 1;mt = m-1; nt = n; pt = p; qt = q;
     	if (mt >= 0) {
     		_val_ = Omega/2*sqrt(m)/PETSC_i;
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
     	// S8 block
     	ct = 2;mt = m; nt = n-1; pt = p; qt = q;
     	if (nt >= 0) {
     		_val_ = -Omega/2*sqrt(n)/PETSC_i;
-    		MatInsert(_val_, nonzeros, col, value, ct, mt, nt, pt, qt);
+    		col[nonzeros] = compute_kt(ct,mt,nt,pt,qt);value[nonzeros] = _val_;nonzeros ++;
     	}
         if (nonzeros > __MAXNOZEROS__){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"

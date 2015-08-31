@@ -40,8 +40,8 @@ public:
   PetscErrorCode assemblance();
   PetscErrorCode seek_steady_state();
   PetscErrorCode viewMatrix();
-  void MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
-  		int ct, int mt, int nt, int pt, int qt);
+//  void MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
+//  		int ct, int mt, int nt, int pt, int qt);
   PetscErrorCode observables_photon();
   PetscErrorCode observables_oscillator();
 };
