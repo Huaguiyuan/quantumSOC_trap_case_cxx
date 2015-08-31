@@ -33,15 +33,10 @@ public:
   PetscErrorCode destruction();
   void initialize();
   void block(int i, int &r, int &m, int &n, int &p, int &q);
-//  void zombie_call_of_block(){block(i,r,c,m,n,p,q);}
-  int compute_kt(int, int, int, int, int);
   PetscErrorCode construction();
-  PetscErrorCode preallocation();
   PetscErrorCode assemblance();
   PetscErrorCode seek_steady_state();
   PetscErrorCode viewMatrix();
-//  void MatInsert(PetscScalar _val_, int &nonzeros, PetscInt* col, PetscScalar* value,
-//  		int ct, int mt, int nt, int pt, int qt);
   PetscErrorCode observables_photon();
   PetscErrorCode observables_oscillator();
 };

@@ -42,7 +42,6 @@ int main(int argc,char **args){
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   cMasterMatrix GMatrix;
   GMatrix.initialize();
-//  GMatrix.zombie_call_of_block();
   GMatrix.construction();
   GMatrix.seek_steady_state();
   GMatrix.viewMatrix();
