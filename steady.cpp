@@ -109,7 +109,7 @@ PetscErrorCode cMasterMatrix::construction(){
   ierr = PetscMalloc1(2*(N+1)*(Q+1),&col0);CHKERRQ(ierr);
   ierr = PetscMalloc1(2*(N+1)*(Q+1),&value0);CHKERRQ(ierr);
   if (rstart == 0) {
-    int nonzeros = 0;
+    nonzeros = 0;
     for (m=0;m<=N;m++){
       for (p=0;p<=Q;p++){
 	col0[nonzeros] = m*tDIM2+m*tDIM3+p*tDIM4+p; // rho_up_up
@@ -181,10 +181,6 @@ PetscErrorCode cMasterMatrix::assemblance(){
     For matrix assembly, each processor contributes entries for
     the part that it owns locally.
   */
-  int nonzeros; // TODO: check if nonzeros < __MAXNOZEROS__ is true.
-  int ct, mt, nt, pt, qt;
-  int kt;
-  PetscScalar _val_;
   for (ROW=rstart; ROW<rend; ROW++) {
 	  nonzeros = 0;
 	  block(ROW,r,m,n,p,q);
@@ -192,67 +188,62 @@ PetscErrorCode cMasterMatrix::assemblance(){
     case 0:
     	if (ROW != 0) { // Impose Tr[\rho]=1 condition at the first row later.
     	// MUU block
-    	ct = r; mt = m; nt = n; pt = p; qt = q;
-	_val_ = ((p+0.5)*omega+delta)/PETSC_i-((q+0.5)*omega+delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
-	col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
-    	ct = r; mt = m; nt = n; pt = p+1; qt = q;
-    	if (pt <= Q) {
-	  _val_ = -qr/sqrt(2)*sqrt(p+1);
-	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+		col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+p*tDIM4+q;
+	value[nonzeros] = ((p+0.5)*omega+delta)/PETSC_i-((q+0.5)*omega+delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);nonzeros ++;
+
+    	if (p+1 <= Q) {
+	  col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+(p+1)*tDIM4+q;
+	  value[nonzeros] = -qr/sqrt(2)*sqrt(p+1);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n; pt = p-1; qt = q;
-    	if (pt >= 0) {
-	  _val_ =qr/sqrt(2)*sqrt(p);
-	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (p-1 >= 0) {
+	  col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+(p-1)*tDIM4+q;
+	  value[nonzeros] = qr/sqrt(2)*sqrt(p);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n; pt = p; qt = q+1;
-    	if (qt <= Q) {
-	  _val_ = -qr/sqrt(2)*sqrt(q+1);
-	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (q+1 <= Q) {
+	  col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+p*tDIM4+q+1;
+	  value[nonzeros] = -qr/sqrt(2)*sqrt(q+1);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n; pt = p; qt = q-1;
-    	if (qt >= 0) {
-	  _val_ = qr/sqrt(2)*sqrt(q);
-	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (q-1 >= 0) {
+	  col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+p*tDIM4+q-1;
+	  value[nonzeros] = qr/sqrt(2)*sqrt(q);nonzeros ++;
     	}
-    	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
-    	if (mt <= N && nt <= N) {
-	  _val_ = kappa*2*sqrt(m+1)*sqrt(n+1);
-	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (m+1 <= N && n+1 <= N) {
+	  col[nonzeros] = r*tDIM1+(m+1)*tDIM2+(n+1)*tDIM3+p*tDIM4+q;
+	  value[nonzeros] = kappa*2*sqrt(m+1)*sqrt(n+1);nonzeros ++;
     	}
-    	ct = r; mt = m+1; nt = n; pt = p; qt = q;
-    	if (mt <= N) {
-	  _val_ = -varepsilon*sqrt(m+1);
-	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (m+1 <= N) {
+	  col[nonzeros] = r*tDIM1+(m+1)*tDIM2+n*tDIM3+p*tDIM4+q;
+	  value[nonzeros] = -varepsilon*sqrt(m+1);nonzeros ++;
     	}
-    	ct = r; mt = m-1; nt = n; pt = p; qt = q;
-    	if (mt >= 0) {
-	  _val_ = varepsilon*sqrt(m);
-	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (m-1 >= 0) {
+	  col[nonzeros] = r*tDIM1+(m-1)*tDIM2+n*tDIM3+p*tDIM4+q;
+	  value[nonzeros] = varepsilon*sqrt(m);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n+1; pt = p; qt = q;
-    	if (nt <= N) {
-	  _val_ = -varepsilon*sqrt(n+1);
-	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (n+1 <= N) {
+	  col[nonzeros] = r*tDIM1+m*tDIM2+(n+1)*tDIM3+p*tDIM4+q;
+	  value[nonzeros] = -varepsilon*sqrt(n+1);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n-1; pt = p; qt = q;
-    	if (nt >= 0) {
-	  _val_ = varepsilon*sqrt(n);
-	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (n-1 >= 0) {
+	  col[nonzeros] = r*tDIM1+m*tDIM2+(n-1)*tDIM3+p*tDIM4+q;
+	  value[nonzeros] = varepsilon*sqrt(n);nonzeros ++;
     	}
     	// S1 block
-    	ct = 1;mt = m; nt = n+1; pt = p; qt = q;
-    	if (nt <= N) {
-	  _val_ = -Omega/2*sqrt(n+1)/PETSC_i;
-	  // TODO: potential bugs for MatView with pure imaginary number display.
-	  //    		cout << ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt << '\t' << PetscAbsScalar(_val_) << endl;
-	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+    	if (n+1 <= N) {
+	  col[nonzeros] = 1*tDIM1+m*tDIM2+(n+1)*tDIM3+p*tDIM4+q;
+	  value[nonzeros] = -Omega/2*sqrt(n+1)/PETSC_i;nonzeros ++;
     	}
     	// S2 block
-    	ct = 2;mt = m+1; nt = n; pt = p; qt = q;
-    	if (mt <= N) {
-    		_val_ = Omega/2*sqrt(m+1)/PETSC_i;
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+    	if (m+1 <= N) {
+    		col[nonzeros] = 2*tDIM1+(m+1)*tDIM2+n*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = Omega/2*sqrt(m+1)/PETSC_i;nonzeros ++;
     	}
         if (nonzeros > __MAXNOZEROS__){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
@@ -263,65 +254,62 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	break;
     case 1:
     	// MUD block
-    	ct = r; mt = m; nt = n; pt = p; qt = q;
-			_val_ = ((p+0.5)*omega+delta)/PETSC_i-((q+0.5)*omega-delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
-			col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
-    	ct = r; mt = m; nt = n; pt = p+1; qt = q;
-    	if (pt <= Q) {
-    		_val_ = -qr/sqrt(2)*sqrt(p+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+			col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+p*tDIM4+q;
+			value[nonzeros] = ((p+0.5)*omega+delta)/PETSC_i-((q+0.5)*omega-delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);nonzeros ++;
+    	if (p+1 <= Q) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+(p+1)*tDIM4+q;
+    		value[nonzeros] = -qr/sqrt(2)*sqrt(p+1);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n; pt = p-1; qt = q;
-    	if (pt >= 0) {
-    		_val_ = qr/sqrt(2)*sqrt(p);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (p-1 >= 0) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+(p-1)*tDIM4+q;
+    		value[nonzeros] = qr/sqrt(2)*sqrt(p);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n; pt = p; qt = q+1;
-    	if (qt <= Q) {
-    		_val_ = qr/sqrt(2)*sqrt(q+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (q+1 <= Q) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+p*tDIM4+q+1;
+    		value[nonzeros] = qr/sqrt(2)*sqrt(q+1);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n; pt = p; qt = q-1;
-    	if (qt >= 0) {
-    		_val_ = -qr/sqrt(2)*sqrt(q);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (q-1 >= 0) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+p*tDIM4+q-1;
+    		value[nonzeros] = -qr/sqrt(2)*sqrt(q);nonzeros ++;
     	}
-    	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
-    	if (mt <= N && nt <= N) {
-    		_val_ = kappa*2*sqrt(m+1)*sqrt(n+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (m+1 <= N && n+1 <= N) {
+    		col[nonzeros] = r*tDIM1+(m+1)*tDIM2+(n+1)*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = kappa*2*sqrt(m+1)*sqrt(n+1);nonzeros ++;
     	}
-    	ct = r; mt = m+1; nt = n; pt = p; qt = q;
-    	if (mt <= N) {
-    		_val_ = -varepsilon*sqrt(m+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (m+1 <= N) {
+    		col[nonzeros] = r*tDIM1+(m+1)*tDIM2+n*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = -varepsilon*sqrt(m+1);nonzeros ++;
     	}
-    	ct = r; mt = m-1; nt = n; pt = p; qt = q;
-    	if (mt >= 0) {
-    		_val_ = varepsilon*sqrt(m);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (m-1 >= 0) {
+    		col[nonzeros] = r*tDIM1+(m-1)*tDIM2+n*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = varepsilon*sqrt(m);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n+1; pt = p; qt = q;
-    	if (nt <= N) {
-    		_val_ = -varepsilon*sqrt(n+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (n+1 <= N) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+(n+1)*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = -varepsilon*sqrt(n+1);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n-1; pt = p; qt = q;
-    	if (nt >= 0) {
-    		_val_ = varepsilon*sqrt(n);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (n-1 >= 0) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+(n-1)*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = varepsilon*sqrt(n);nonzeros ++;
     	}
     	// S3 block
-    	ct = 0;mt = m; nt = n-1; pt = p; qt = q;
-    	if (nt >= 0) {
-    		_val_ = -Omega/2*sqrt(n)/PETSC_i;
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+    	if (n-1 >= 0) {
+    		col[nonzeros] = m*tDIM2+(n-1)*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = -Omega/2*sqrt(n)/PETSC_i;nonzeros ++;
     	}
     	// S4 block
-    	ct = 3;mt = m+1; nt = n; pt = p; qt = q;
-    	if (mt <= N) {
-    		_val_ = Omega/2*sqrt(m+1)/PETSC_i;
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (m+1 <= N) {
+    		col[nonzeros] = 3*tDIM1+(m+1)*tDIM2+n*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = Omega/2*sqrt(m+1)/PETSC_i;nonzeros ++;
     	}
         if (nonzeros > __MAXNOZEROS__){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
@@ -331,65 +319,63 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	break;
     case 2:
     	// MDU block
-    	ct = r; mt = m; nt = n; pt = p; qt = q;
-			_val_ = ((p+0.5)*omega-delta)/PETSC_i-((q+0.5)*omega+delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
-			col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
-    	ct = r; mt = m; nt = n; pt = p+1; qt = q;
-    	if (pt <= Q) {
-    		_val_ = qr/sqrt(2)*sqrt(p+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+			col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+p*tDIM4+q;
+			value[nonzeros] = ((p+0.5)*omega-delta)/PETSC_i-((q+0.5)*omega+delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);nonzeros ++;
+
+    	if (p+1 <= Q) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+(p+1)*tDIM4+q;
+    		value[nonzeros] = qr/sqrt(2)*sqrt(p+1);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n; pt = p-1; qt = q;
-    	if (pt >= 0) {
-    		_val_ = -qr/sqrt(2)*sqrt(p);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (p-1 >= 0) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+(p-1)*tDIM4+q;
+    		value[nonzeros] = -qr/sqrt(2)*sqrt(p);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n; pt = p; qt = q+1;
-    	if (qt <= Q) {
-    		_val_ = -qr/sqrt(2)*sqrt(q+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (q+1 <= Q) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+p*tDIM4+q+1;
+    		value[nonzeros] = -qr/sqrt(2)*sqrt(q+1);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n; pt = p; qt = q-1;
-    	if (qt >= 0) {
-    		_val_ =  qr/sqrt(2)*sqrt(q);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (q-1 >= 0) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+p*tDIM4+q-1;
+    		value[nonzeros] = qr/sqrt(2)*sqrt(q);nonzeros ++;
     	}
-    	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
-    	if (mt <= N && nt <= N) {
-    		_val_ = kappa*2*sqrt(m+1)*sqrt(n+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (m+1 <= N && n+1 <= N) {
+    		col[nonzeros] = r*tDIM1+(m+1)*tDIM2+(n+1)*tDIM3+p*tDIM4+q;
+    		value[nonzeros] =kappa*2*sqrt(m+1)*sqrt(n+1);nonzeros ++;
     	}
-    	ct = r; mt = m+1; nt = n; pt = p; qt = q;
-    	if (mt <= N) {
-    		_val_ = -varepsilon*sqrt(m+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (m+1 <= N) {
+    		col[nonzeros] = r*tDIM1+(m+1)*tDIM2+n*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = -varepsilon*sqrt(m+1);nonzeros ++;
     	}
-    	ct = r; mt = m-1; nt = n; pt = p; qt = q;
-    	if (mt >= 0) {
-    		_val_ = varepsilon*sqrt(m);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (m-1 >= 0) {
+    		col[nonzeros] = r*tDIM1+(m-1)*tDIM2+n*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = varepsilon*sqrt(m);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n+1; pt = p; qt = q;
-    	if (nt <= N) {
-    		_val_ = -varepsilon*sqrt(n+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (n+1 <= N) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+(n+1)*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = -varepsilon*sqrt(n+1);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n-1; pt = p; qt = q;
-    	if (nt >= 0) {
-    		_val_ = varepsilon*sqrt(n);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (n-1 >= 0) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+(n-1)*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = varepsilon*sqrt(n);nonzeros ++;
     	}
     	// S5 block
-    	ct = 0;mt = m-1; nt = n; pt = p; qt = q;
-    	if (mt >= 0) {
-    		_val_ = Omega/2*sqrt(m)/PETSC_i;
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (m-1 >= 0) {
+    		col[nonzeros] = (m-1)*tDIM2+n*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = Omega/2*sqrt(m)/PETSC_i;nonzeros ++;
     	}
     	// S6 block
-    	ct = 3;mt = m; nt = n+1; pt = p; qt = q;
-    	if (nt <= N) {
-    		_val_ = -Omega/2*sqrt(n+1)/PETSC_i;
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+    	if (n+1 <= N) {
+    		col[nonzeros] = 3*tDIM1+m*tDIM2+(n+1)*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = -Omega/2*sqrt(n+1)/PETSC_i;nonzeros ++;
     	}
         if (nonzeros > __MAXNOZEROS__){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
@@ -399,65 +385,62 @@ PetscErrorCode cMasterMatrix::assemblance(){
         break;
     case 3:
     	// MDD block
-    	ct = r; mt = m; nt = n; pt = p; qt = q;
-			_val_ = ((p+0.5)*omega-delta)/PETSC_i-((q+0.5)*omega-delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
-			col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
-    	ct = r; mt = m; nt = n; pt = p+1; qt = q;
-    	if (pt <= Q) {
-    		_val_ = qr/sqrt(2)*sqrt(p+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+			col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+p*tDIM4+q;
+			value[nonzeros] = ((p+0.5)*omega-delta)/PETSC_i-((q+0.5)*omega-delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);nonzeros ++;
+
+    	if (p+1 <= Q) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+(p+1)*tDIM4+q;
+    		value[nonzeros] = qr/sqrt(2)*sqrt(p+1);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n; pt = p-1; qt = q;
-    	if (pt >= 0) {
-    		_val_ = -qr/sqrt(2)*sqrt(p);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (p-1 >= 0) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+(p-1)*tDIM4+q;
+    		value[nonzeros] = -qr/sqrt(2)*sqrt(p);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n; pt = p; qt = q+1;
-    	if (qt <= Q) {
-    		_val_ = qr/sqrt(2)*sqrt(q+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (q+1 <= Q) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+p*tDIM4+q+1;
+    		value[nonzeros] = qr/sqrt(2)*sqrt(q+1);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n; pt = p; qt = q-1;
-    	if (qt >= 0) {
-    		_val_ = -qr/sqrt(2)*sqrt(q);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (q-1 >= 0) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+n*tDIM3+p*tDIM4+q-1;
+    		value[nonzeros] = -qr/sqrt(2)*sqrt(q);nonzeros ++;
     	}
-    	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
-    	if (mt <= N && nt <= N) {
-    		_val_ = kappa*2*sqrt(m+1)*sqrt(n+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (m+1 <= N && n+1 <= N) {
+    		col[nonzeros] = r*tDIM1+(m+1)*tDIM2+(n+1)*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = kappa*2*sqrt(m+1)*sqrt(n+1);nonzeros ++;
     	}
-    	ct = r; mt = m+1; nt = n; pt = p; qt = q;
-    	if (mt <= N) {
-    		_val_ = -varepsilon*sqrt(m+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (m+1 <= N) {
+    		col[nonzeros] = r*tDIM1+(m+1)*tDIM2+n*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = -varepsilon*sqrt(m+1);nonzeros ++;
     	}
-    	ct = r; mt = m-1; nt = n; pt = p; qt = q;
-    	if (mt >= 0) {
-    		_val_ = varepsilon*sqrt(m);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (m-1 >= 0) {
+    		col[nonzeros] = r*tDIM1+(m-1)*tDIM2+n*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = varepsilon*sqrt(m);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n+1; pt = p; qt = q;
-    	if (nt <= N) {
-    		_val_ = -varepsilon*sqrt(n+1);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (n+1 <= N) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+(n+1)*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = -varepsilon*sqrt(n+1);nonzeros ++;
     	}
-    	ct = r; mt = m; nt = n-1; pt = p; qt = q;
-    	if (nt >= 0) {
-    		_val_ = varepsilon*sqrt(n);
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+
+    	if (n-1 >= 0) {
+    		col[nonzeros] = r*tDIM1+m*tDIM2+(n-1)*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = varepsilon*sqrt(n);nonzeros ++;
     	}
     	// S7 block
-    	ct = 1;mt = m-1; nt = n; pt = p; qt = q;
-    	if (mt >= 0) {
-    		_val_ = Omega/2*sqrt(m)/PETSC_i;
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+    	if (m-1 >= 0) {
+    		col[nonzeros] = tDIM1+(m-1)*tDIM2+n*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = Omega/2*sqrt(m)/PETSC_i;nonzeros ++;
     	}
     	// S8 block
-    	ct = 2;mt = m; nt = n-1; pt = p; qt = q;
-    	if (nt >= 0) {
-    		_val_ = -Omega/2*sqrt(n)/PETSC_i;
-    		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
+    	if (n-1 >= 0) {
+    		col[nonzeros] = 2*tDIM1+m*tDIM2+(n-1)*tDIM3+p*tDIM4+q;
+    		value[nonzeros] = -Omega/2*sqrt(n)/PETSC_i;nonzeros ++;
     	}
         if (nonzeros > __MAXNOZEROS__){
         	cerr << "nonzeros on a row " <<  nonzeros << " is larger than the pre-allocated range of"
@@ -564,7 +547,7 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
 
 
 PetscErrorCode cMasterMatrix::observables_photon(){
-	int nonzeros = 0;double phtn_n_r, phtn_fluc_r, tmpdiagrho;
+	nonzeros = 0;double phtn_n_r, phtn_fluc_r, tmpdiagrho;
 	cout.precision(16);
 	phtn_n_r = 0;phtn_fluc_r = 0;tmpdiagrho = 0;
 	PetscScalar value0;
@@ -609,7 +592,7 @@ PetscErrorCode cMasterMatrix::observables_photon(){
 }
 
 PetscErrorCode cMasterMatrix::observables_oscillator(){
-	int nonzeros = 0;double phtn_n_r, phtn_fluc_r, tmpdiagrho;
+	nonzeros = 0;double phtn_n_r, phtn_fluc_r, tmpdiagrho;
 	cout.precision(16);
 	phtn_n_r = 0;phtn_fluc_r = 0;tmpdiagrho = 0;
 	PetscScalar value0;

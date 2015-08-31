@@ -18,7 +18,7 @@ private:
   PC             pc;               /* preconditioner context */
   PetscReal      norm,tol;  /* norm of solution error */
   PetscViewer    viewer;
-  PetscInt       ROW,COLUMN,m,n,p,q,k,r,c,its,rstart,rend,nlocal,col[__MAXNOZEROS__];
+  PetscInt       ROW,COLUMN,m,n,p,q,k,r,c,its,rstart,rend,nlocal,col[__MAXNOZEROS__],nonzeros;
   PetscScalar    value[__MAXNOZEROS__], one, neg_one, val;
 protected:
   PetscErrorCode ierr;
