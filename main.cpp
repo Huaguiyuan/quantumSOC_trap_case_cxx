@@ -20,6 +20,7 @@ T*/
 */
 #include <petscksp.h>
 #include "steady.h"
+#include "obs.h"
 #undef __FUNCT__
 #define __FUNCT__ "main"
 #define root 0
@@ -45,14 +46,16 @@ int main(int argc,char **args){
   GMatrix.construction();
   GMatrix.seek_steady_state();
   GMatrix.viewMatrix();
-  GMatrix.observables_photon();
-  GMatrix.observables_oscillator();
+  cMasterObservables DensityOps;
+  DensityOps.photon(GMatrix);
+  DensityOps.oscillator(GMatrix);
   /*
      Always call PetscFinalize() before exiting a program.  This routine
        - finalizes the PETSc libraries as well as MPI
        - provides summary and diagnostic information if certain runtime
          options are chosen (e.g., -log_summary).
   */
+  DensityOps.destruction();
   GMatrix.destruction();
   ierr = PetscFinalize();
   return 0;

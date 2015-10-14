@@ -7,10 +7,12 @@
 #include <math.h>
 #include <cmath> 
 //#include <ctgmath>
+#include "obs.h"
 using namespace std;
 const PetscInt __MAXNOZEROS__ = 23; // This is the max number in a row --> theoretically largest recursion relation index given by the master equation.
 
 class cMasterMatrix{
+	friend class cMasterObservables;
 private:
   Vec            b,u;          /* RHS, test_exact solutions */
   Mat            G;                /* linear system matrix */
@@ -37,7 +39,5 @@ public:
   PetscErrorCode assemblance();
   PetscErrorCode seek_steady_state();
   PetscErrorCode viewMatrix();
-  PetscErrorCode observables_photon();
-  PetscErrorCode observables_oscillator();
 };
 #endif

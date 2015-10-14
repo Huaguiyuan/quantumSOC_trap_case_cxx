@@ -1,9 +1,9 @@
-N		8
-Q		8
+N		3
+Q		3
 omega		1
 qr		0.22
 Omega		5
-delta		0.5
+delta		1
 varepsilon	1
 delta_c		1
 kappa		1
