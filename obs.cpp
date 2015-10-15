@@ -24,7 +24,8 @@ PetscErrorCode cMasterObservables::photon(cMasterMatrix GMatrix){
 			if (m==n && p==q){
 				ierr = VecGetValues(GMatrix.x,1,&ROW,&value0);CHKERRQ(ierr);
 //				col[nonzeros] = m; // saved for photon number computation
-//				cout << value[nonzeros] << '\t' << r+1 << '\t' << m << '\t' << p << endl; //
+//				cout << value0 << '\t' << r+1 << '\t' << m << '\t' << p << endl; //
+//				cout << value0 << '\t' << r*(N+1)*(Q+1)+m*(Q+1)+p+1 << endl;
 //				if (PetscImaginaryPart(value[nonzeros]) > 1.e-5) {
 //					cerr << "check the convergence, the imaginary part is intolerably large, stopping now... " << endl;
 //					exit(1);
@@ -170,8 +171,8 @@ PetscErrorCode cMasterObservables::ReshapeRho(cMasterMatrix GMatrix){
 //	ierr = MatAXPY(RhoMat,-1.0,RhoMat_Hermit,SAME_NONZERO_PATTERN);CHKERRQ(ierr);
 	//	OKAY: it is hermitian to a degree, say 1e-16... TODO: need to remember to turn the checking off if you still want to proceed from here.
 //	ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,	PETSC_VIEWER_ASCII_DENSE  );CHKERRQ(ierr);
-  ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,	PETSC_VIEWER_ASCII_MATLAB  );CHKERRQ(ierr);
-  ierr = MatView(RhoMat,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
+//  ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,	PETSC_VIEWER_ASCII_MATLAB  );CHKERRQ(ierr);
+//  ierr = MatView(RhoMat,	PETSC_VIEWER_STDOUT_WORLD );CHKERRQ(ierr);
 	return ierr;
 }
 
@@ -199,38 +200,47 @@ PetscErrorCode cMasterObservables::negativity(){
 	ierr = PetscPrintf(PETSC_COMM_WORLD," Stopping condition: tol=%.4g, maxit=%D\n",(double)tol,maxit);CHKERRQ(ierr);
 	ierr = EPSGetConverged(eps,&nconv);CHKERRQ(ierr);
 	ierr = PetscPrintf(PETSC_COMM_WORLD," Number of converged eigenpairs: %D\n\n",nconv);CHKERRQ(ierr);
-	if (nconv>0) {
-		/*
-		Display eigenvalues and relative errors
-		*/
-		ierr = PetscPrintf(PETSC_COMM_WORLD,
-		"           k          ||Ax-kx||/||kx||\n"
-		"   ----------------- ------------------\n");CHKERRQ(ierr);
-		for (int i=0;i<nconv;i++) {
-			ierr = EPSGetEigenpair(eps,i,&kr2,&ki,xr,xi);CHKERRQ(ierr);
-			/*
-			Compute the relative error associated to each eigenpair
-			*/
-			ierr = EPSComputeError(eps,i,EPS_ERROR_RELATIVE,&error);CHKERRQ(ierr);
-			#if defined(PETSC_USE_COMPLEX)
-				re = PetscRealPart(kr2);
-				im = PetscImaginaryPart(kr2);
-			#else
-				re = kr2;
-				im = ki;
-			#endif
-			if (im!=0.0) {
-				ierr = PetscPrintf(PETSC_COMM_WORLD," %9f%+9f j %12g\n",(double)re,(double)im,(double)error);CHKERRQ(ierr);
-			} else {
-				ierr = PetscPrintf(PETSC_COMM_WORLD,"   %12f       %12g\n",(double)re,(double)error);CHKERRQ(ierr);
-			}
-//					cout << i <<"th eigenvalue is" << re + im*PETSC_i << endl;
-		}
-		ierr = PetscPrintf(PETSC_COMM_WORLD,"\n");CHKERRQ(ierr);
-	}
-//		if (nconv>0) {
-//
+//	if (nconv>0) {
+//		/*
+//		Display eigenvalues and relative errors
+//		*/
+//		ierr = PetscPrintf(PETSC_COMM_WORLD,
+//		"           k          ||Ax-kx||/||kx||\n"
+//		"   ----------------- ------------------\n");CHKERRQ(ierr);
+//		for (int i=0;i<nconv;i++) {
+//			ierr = EPSGetEigenpair(eps,i,&kr2,&ki,xr,xi);CHKERRQ(ierr);
+//			/*
+//			Compute the relative error associated to each eigenpair
+//			*/
+//			ierr = EPSComputeError(eps,i,EPS_ERROR_RELATIVE,&error);CHKERRQ(ierr);
+//			#if defined(PETSC_USE_COMPLEX)
+//				re = PetscRealPart(kr2);
+//				im = PetscImaginaryPart(kr2);
+//			#else
+//				re = kr2;
+//				im = ki;
+//			#endif
+//			if (im!=0.0) {
+//				ierr = PetscPrintf(PETSC_COMM_WORLD," %9f%+9f j %12g\n",(double)re,(double)im,(double)error);CHKERRQ(ierr);
+//			} else {
+//				ierr = PetscPrintf(PETSC_COMM_WORLD,"   %12f       %12g\n",(double)re,(double)error);CHKERRQ(ierr);
+//			}
+////					cout << i <<"th eigenvalue is" << re + im*PETSC_i << endl;
 //		}
+//		ierr = PetscPrintf(PETSC_COMM_WORLD,"\n");CHKERRQ(ierr);
+//	}
+	double negativity = 0.0;
+		if (nconv>0) {
+			for (int i=0;i<nconv;i++) {
+				ierr = EPSGetEigenpair(eps,i,&kr2,&ki,xr,xi);CHKERRQ(ierr);
+				re = PetscRealPart(kr2);
+				negativity += (abs((double)re)-(double)re)/2.0;
+			}
+//			ierr = PetscPrintf(PETSC_COMM_WORLD,"negativity is %12f\n", negativity); CHKERRQ(ierr);
+			if (rank==0) cout << "negativity is " << negativity << endl;
+		} else{
+			SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_USER,"None of the eigenparis are converged. Stopping now.");
+		}
 	return ierr;
 }
 
