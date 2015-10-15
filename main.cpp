@@ -19,6 +19,7 @@ T*/
 
 */
 #include <petscksp.h>
+#include <slepceps.h>
 #include "steady.h"
 #include "obs.h"
 #undef __FUNCT__
@@ -26,7 +27,7 @@ T*/
 #define root 0
 int main(int argc,char **args){
   PetscErrorCode ierr;
-  PetscInitialize(&argc,&args,(char*)0,help);
+  SlepcInitialize(&argc,&args,(char*)0,help);
   ierr = PetscPrintf(PETSC_COMM_WORLD,
 		     "======================================================================\n"
 		     "The purpose of this program is to study the steady state solution of\n"
@@ -47,8 +48,11 @@ int main(int argc,char **args){
   GMatrix.seek_steady_state();
   GMatrix.viewMatrix();
   cMasterObservables DensityOps;
+  DensityOps.initialize(GMatrix);
   DensityOps.photon(GMatrix);
   DensityOps.oscillator(GMatrix);
+  DensityOps.ReshapeRho(GMatrix);
+  DensityOps.negativity();
   /*
      Always call PetscFinalize() before exiting a program.  This routine
        - finalizes the PETSc libraries as well as MPI
@@ -57,6 +61,6 @@ int main(int argc,char **args){
   */
   DensityOps.destruction();
   GMatrix.destruction();
-  ierr = PetscFinalize();
+  ierr = SlepcFinalize();
   return 0;
 }

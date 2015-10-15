@@ -1,6 +1,7 @@
 #ifndef OBS_H_
 #define OBS_H_
 #include <petscksp.h>
+#include <slepceps.h>
 #include <iostream>
 #include <math.h>
 #include <cmath>
@@ -9,17 +10,25 @@ class cMasterMatrix;
 using namespace std;
 class cMasterObservables{
 private:
-	PetscInt DIM2, rhostart, rhoend;
+	EPS		eps;
+	  EPSType		 type;
+	PetscInt N,Q, DIM2, rhostart, rhoend,nlocalrow,ROW,nev,its,maxit,nconv;;
 	Mat      RhoMat;
-	PetscErrorCode ierr_obs;
+	PetscErrorCode ierr;
 	double    	PhotonNumber, PhotonFluc, tmpRhoDiagonal;
+	PetscReal	tol,error,re,im;
+	PetscScalar kr2,ki;
+	Vec            xr,xi;          /* RHS, test_exact solutions */
+	  PetscMPIInt      rank, size;
+		PetscInt m,n,p,q,r,rstart,rend;
 public:
 	cMasterObservables(){}
 	~cMasterObservables(){}
-	void initialize();
+	void initialize(cMasterMatrix);
 	PetscErrorCode destruction();
-	PetscErrorCode ReshapeRho();
-	PetscErrorCode photon(cMasterMatrix GMatrix);
-	PetscErrorCode oscillator(cMasterMatrix GMatrix);
+	PetscErrorCode ReshapeRho(cMasterMatrix);
+	PetscErrorCode photon(cMasterMatrix);
+	PetscErrorCode oscillator(cMasterMatrix);
+	PetscErrorCode negativity();
 };
 #endif

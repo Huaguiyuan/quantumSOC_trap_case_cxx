@@ -13,10 +13,11 @@ OBJ=$(EXAMPLESC:.cpp=.o)
 
 include ${PETSC_DIR}/lib/petsc/conf/variables
 include ${PETSC_DIR}/lib/petsc/conf/rules
+include ${SLEPC_DIR}/lib/slepc/conf/slepc_common
 
 EXE = SteadyState
 ${EXE}: ${OBJ}  chkopts
-	-${CLINKER} -o ${EXE} ${OBJ}  ${PETSC_KSP_LIB}
+	-${CLINKER} -o ${EXE} ${OBJ}  ${PETSC_KSP_LIB} ${SLEPC_EPS_LIB}
 #	${RM} ${OBJ}
 
 #EXE = steady

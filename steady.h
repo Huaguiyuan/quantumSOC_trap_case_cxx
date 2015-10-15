@@ -1,6 +1,7 @@
 #ifndef STEADY_H_
 #define STEADY_H_
 #include <petscksp.h>
+#include <slepceps.h>
 #include <iostream>
 #include <fstream>
 #include <assert.h>
