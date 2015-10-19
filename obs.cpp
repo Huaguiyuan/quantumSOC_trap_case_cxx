@@ -177,8 +177,8 @@ PetscErrorCode cMasterObservables::ReshapeRho(cMasterMatrix GMatrix){
 }
 
 PetscErrorCode cMasterObservables::negativity(){
-	ierr = MatCreateVecs(RhoMat,NULL,&xr);CHKERRQ(ierr);
-	ierr = MatCreateVecs(RhoMat,NULL,&xi);CHKERRQ(ierr);
+//	ierr = MatCreateVecs(RhoMat,NULL,&xr);CHKERRQ(ierr);
+//	ierr = MatCreateVecs(RhoMat,NULL,&xi);CHKERRQ(ierr);
 	ierr = EPSCreate(PETSC_COMM_WORLD,&eps);CHKERRQ(ierr);
 	ierr = EPSSetOperators(eps,RhoMat,NULL);CHKERRQ(ierr);
 	ierr = EPSSetProblemType(eps,EPS_NHEP);CHKERRQ(ierr); // <-- ATTENTION: partial transpose of density matrix generally is NOT hermitian matrix.
@@ -232,7 +232,7 @@ PetscErrorCode cMasterObservables::negativity(){
 	double negativity = 0.0;
 		if (nconv>0) {
 			for (int i=0;i<nconv;i++) {
-				ierr = EPSGetEigenpair(eps,i,&kr2,&ki,xr,xi);CHKERRQ(ierr);
+				ierr = EPSGetEigenpair(eps,i,&kr2,&ki,NULL,NULL);CHKERRQ(ierr);
 				re = PetscRealPart(kr2);
 				negativity += (abs((double)re)-(double)re)/2.0;
 			}
@@ -251,7 +251,7 @@ PetscErrorCode cMasterObservables::destruction(){
   */
 	ierr = MatDestroy(&RhoMat);CHKERRQ(ierr);
 	ierr = EPSDestroy(&eps);CHKERRQ(ierr);
-	ierr = VecDestroy(&xr);CHKERRQ(ierr);
-	ierr = VecDestroy(&xi);CHKERRQ(ierr);
+//	ierr = VecDestroy(&xr);CHKERRQ(ierr);
+//	ierr = VecDestroy(&xi);CHKERRQ(ierr);
 	return ierr;
 }
