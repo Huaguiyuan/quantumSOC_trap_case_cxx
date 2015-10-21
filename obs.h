@@ -30,5 +30,6 @@ public:
 	PetscErrorCode photon(cMasterMatrix);
 	PetscErrorCode oscillator(cMasterMatrix);
 	PetscErrorCode negativity();
+	PetscErrorCode checkODT(cMasterMatrix);
 };
 #endif
