@@ -16,6 +16,8 @@ private:
 	Mat      RhoMat;
 	PetscErrorCode ierr;
 	double    	PhotonNumber, PhotonFluc, tmpRhoDiagonal;
+	double    	OsciNumber, OsciFluc;
+	double		ODTNumber_Q,ODTNumber_N;
 	PetscReal	tol,error,re,im;
 	PetscScalar kr2,ki;
 	Vec            xr,xi;          /* RHS, test_exact solutions */

@@ -51,9 +51,9 @@ PetscErrorCode cMasterObservables::photon(cMasterMatrix GMatrix){
 }
 
 PetscErrorCode cMasterObservables::oscillator(cMasterMatrix GMatrix){
-	int nonzeros = 0;double phtn_n_r, phtn_fluc_r, tmpdiagrho;
+	int nonzeros = 0;double osci_n_r, osci_fluc_r, tmpdiagrho;
 	cout.precision(16);
-	phtn_n_r = 0;phtn_fluc_r = 0;tmpdiagrho = 0;
+	osci_n_r = 0;osci_fluc_r = 0;tmpdiagrho = 0;
 	PetscScalar value0;
 	for (ROW=rstart;ROW<rend;ROW++){
 		GMatrix.block(ROW, r, m, n, p, q);
@@ -67,20 +67,20 @@ PetscErrorCode cMasterObservables::oscillator(cMasterMatrix GMatrix){
 //					exit(1);
 //				}
 //				tmpdiagrho += PetscRealPart(value[nonzeros]);
-				phtn_n_r += PetscRealPart(value0)*p; // checked the imaginary part is exceedingly small as it should be.
-				phtn_fluc_r += PetscRealPart(value0)*p*p;
+				osci_n_r += PetscRealPart(value0)*p; // checked the imaginary part is exceedingly small as it should be.
+				osci_fluc_r += PetscRealPart(value0)*p*p;
 				nonzeros++;
 			}
 		}
 	}
 //	cout << "rank " << rank << " has photon number: " << phtn_n_r << " photon fluc: " << phtn_fluc_r << endl;
-	MPI_Reduce(&phtn_n_r, &PhotonNumber, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
-	MPI_Reduce(&phtn_fluc_r, &PhotonFluc, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+	MPI_Reduce(&osci_n_r, &OsciNumber, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+	MPI_Reduce(&osci_fluc_r, &OsciFluc, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 //	MPI_Reduce(&tmpdiagrho, &tmpRhoDiagonal, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 	if (rank == 0) {
-		PhotonFluc = (PhotonFluc - PhotonNumber*PhotonNumber)/PhotonNumber; // normalization to 1 for coherent state at root
-	cout << "orbital number is " << PhotonNumber  << '\t'
-			<< "orbital number fluctuation is " << PhotonFluc << endl;
+		OsciFluc = (OsciFluc - OsciNumber*OsciNumber)/OsciNumber; // normalization to 1 for coherent state at root
+	cout << "orbital number is " << OsciNumber  << '\t'
+			<< "orbital number fluctuation is " << OsciFluc << endl;
 //	cout << "sum of diag " << tmpRhoDiagonal << endl;
 	}
 
@@ -111,15 +111,15 @@ PetscErrorCode cMasterObservables::ReshapeRho(cMasterMatrix GMatrix){
 //	ierr = MatSetOption(RhoMat, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);CHKERRQ(ierr);
 	PetscScalar value;
 	// --> debug purpose of serial output:
-	for (int ig = 0; ig < size; ++ig) {
-		if (rank==ig) {
-			for (ROW=rstart;ROW<rend;ROW++){
-				GMatrix.block(ROW, r, m, n, p, q);
-				ierr = VecGetValues(GMatrix.x,1,&ROW,&value);CHKERRQ(ierr);
+//	for (int ig = 0; ig < size; ++ig) {
+//		if (rank==ig) {
+//			for (ROW=rstart;ROW<rend;ROW++){
+//				GMatrix.block(ROW, r, m, n, p, q);
+//				ierr = VecGetValues(GMatrix.x,1,&ROW,&value);CHKERRQ(ierr);
 //				cout << value << endl;
-			}
-		}
-	}
+//			}
+//		}
+//	}
 	for (ROW=rstart;ROW<rend;ROW++){
 		GMatrix.block(ROW, r, m, n, p, q);
 		ierr = VecGetValues(GMatrix.x,1,&ROW,&value);CHKERRQ(ierr);
@@ -245,48 +245,48 @@ PetscErrorCode cMasterObservables::negativity(){
 }
 
 PetscErrorCode cMasterObservables::checkODT(cMasterMatrix GMatrix){
-	int nonzeros = 0;double phtn_n_r, phtn_fluc_r, tmpdiagrho;
+	int nonzeros = 0;double ODT_n_r, ODT_fluc_r, tmpdiagrho;
 		cout.precision(16);
 		PetscScalar value0;
 		for (int Q0 = 0; Q0 < Q+1; ++Q0) {
-			phtn_n_r = 0;
+			ODT_n_r = 0;
 			for (ROW=rstart;ROW<rend;ROW++){
 				GMatrix.block(ROW, r, m, n, p, q);
 				if (r==0 || r==3){ // Getting diagonal elements of rho_up_up and rho_dn_dn for all photon and orbital numbers
 					if (m==n && p==q && p==Q0){
 						ierr = VecGetValues(GMatrix.x,1,&ROW,&value0);CHKERRQ(ierr);
-						phtn_n_r += PetscRealPart(value0);
+						ODT_n_r += PetscRealPart(value0);
 					}
 				}
 			}
 
 		//	cout << "rank " << rank << " has photon number: " << phtn_n_r << " photon fluc: " << phtn_fluc_r << endl;
-			MPI_Reduce(&phtn_n_r, &PhotonNumber, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+			MPI_Reduce(&ODT_n_r, &ODTNumber_Q, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 			//MPI_Reduce(&phtn_fluc_r, &PhotonFluc, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 		//	MPI_Reduce(&tmpdiagrho, &tmpRhoDiagonal, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 			if (rank == 0) {
-			cout << "q value is " << Q0 << '\t' << "sum Q0 value is " << PhotonNumber  << endl;
+			cout << "q value is " << Q0 << '\t' << "sum Q0 value is " << ODTNumber_Q  << endl;
 			}
 		}
 
 		for (int Q0 = 0; Q0 < N+1; ++Q0) {
-			phtn_n_r = 0;
+			ODT_fluc_r = 0;
 			for (ROW=rstart;ROW<rend;ROW++){
 				GMatrix.block(ROW, r, m, n, p, q);
 				if (r==0 || r==3){ // Getting diagonal elements of rho_up_up and rho_dn_dn for all photon and orbital numbers
 					if (m==n && p==q && m==Q0){
 						ierr = VecGetValues(GMatrix.x,1,&ROW,&value0);CHKERRQ(ierr);
-						phtn_n_r += PetscRealPart(value0);
+						ODT_fluc_r += PetscRealPart(value0);
 					}
 				}
 			}
 
 		//	cout << "rank " << rank << " has photon number: " << phtn_n_r << " photon fluc: " << phtn_fluc_r << endl;
-			MPI_Reduce(&phtn_n_r, &PhotonNumber, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+			MPI_Reduce(&ODT_fluc_r, &ODTNumber_N, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 			//MPI_Reduce(&phtn_fluc_r, &PhotonFluc, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 		//	MPI_Reduce(&tmpdiagrho, &tmpRhoDiagonal, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
 			if (rank == 0) {
-			cout << "n value is " << Q0 << '\t' << "sum N0 value is " << PhotonNumber  << endl;
+			cout << "n value is " << Q0 << '\t' << "sum N0 value is " << ODTNumber_N  << endl;
 			}
 		}
 //
