@@ -551,6 +551,7 @@ PetscErrorCode cMasterMatrix::seek_steady_state(){
      /*
         Check the error
      */
+//    ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_MATLAB);
 //    ierr = VecView(x,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
 //     ierr = VecAXPY(x,neg_one,u);CHKERRQ(ierr);
 //     ierr = VecNorm(x,NORM_2,&norm);CHKERRQ(ierr);

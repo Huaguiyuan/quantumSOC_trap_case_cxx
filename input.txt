@@ -1,10 +1,10 @@
 N		3
 Q		20
 omega		1
-qr		3.162277660168380
-Omega		80
-delta		0.05
-varepsilon	100
+qr		0.22
+Omega		1
+delta		1
+varepsilon	1
 delta_c		1
-kappa		100
+kappa		1
 tol		1.e-7
