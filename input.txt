@@ -1,5 +1,5 @@
 N		3
-Q		20
+Q		5
 omega		1
 qr		0.22
 Omega		1
