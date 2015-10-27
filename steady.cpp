@@ -193,7 +193,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	if (ROW != 0) { // Impose Tr[\rho]=1 condition at the first row later.
     	// MUU block
     	ct = r; mt = m; nt = n; pt = p; qt = q;
-	_val_ = ((p+0.5)*omega+delta)/PETSC_i-((q+0.5)*omega+delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
+	_val_ = ((p+0.5)*omega+delta)/PETSC_i-((q+0.5)*omega+delta)/PETSC_i+PETSC_i*delta_c*double(m-n)-kappa*double(m+n);
 	col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
@@ -217,7 +217,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	}
     	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
     	if (mt <= N && nt <= N) {
-	  _val_ = kappa*2*sqrt(m+1)*sqrt(n+1);
+	  _val_ = kappa*2.0*sqrt(m+1)*sqrt(n+1);
 	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n; pt = p; qt = q;
@@ -243,7 +243,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	// S1 block
     	ct = 1;mt = m; nt = n+1; pt = p; qt = q;
     	if (nt <= N) {
-	  _val_ = -Omega/2*sqrt(n+1)/PETSC_i;
+	  _val_ = -Omega/2.0*sqrt(n+1)/PETSC_i;
 	  // TODO: potential bugs for MatView with pure imaginary number display.
 	  //    		cout << ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt << '\t' << PetscAbsScalar(_val_) << endl;
 	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
@@ -251,7 +251,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	// S2 block
     	ct = 2;mt = m+1; nt = n; pt = p; qt = q;
     	if (mt <= N) {
-    		_val_ = Omega/2*sqrt(m+1)/PETSC_i;
+    		_val_ = Omega/2.0*sqrt(m+1)/PETSC_i;
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
         if (nonzeros > __MAXNOZEROS__){
@@ -264,7 +264,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     case 1:
     	// MUD block
     	ct = r; mt = m; nt = n; pt = p; qt = q;
-			_val_ = ((p+0.5)*omega+delta)/PETSC_i-((q+0.5)*omega-delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
+			_val_ = ((p+0.5)*omega+delta)/PETSC_i-((q+0.5)*omega-delta)/PETSC_i+PETSC_i*delta_c*double(m-n)-kappa*double(m+n);
 			col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
@@ -288,7 +288,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	}
     	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
     	if (mt <= N && nt <= N) {
-    		_val_ = kappa*2*sqrt(m+1)*sqrt(n+1);
+    		_val_ = kappa*2.0*sqrt(m+1)*sqrt(n+1);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n; pt = p; qt = q;
@@ -314,13 +314,13 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	// S3 block
     	ct = 0;mt = m; nt = n-1; pt = p; qt = q;
     	if (nt >= 0) {
-    		_val_ = -Omega/2*sqrt(n)/PETSC_i;
+    		_val_ = -Omega/2.0*sqrt(n)/PETSC_i;
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	// S4 block
     	ct = 3;mt = m+1; nt = n; pt = p; qt = q;
     	if (mt <= N) {
-    		_val_ = Omega/2*sqrt(m+1)/PETSC_i;
+    		_val_ = Omega/2.0*sqrt(m+1)/PETSC_i;
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
         if (nonzeros > __MAXNOZEROS__){
@@ -332,7 +332,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     case 2:
     	// MDU block
     	ct = r; mt = m; nt = n; pt = p; qt = q;
-			_val_ = ((p+0.5)*omega-delta)/PETSC_i-((q+0.5)*omega+delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
+			_val_ = ((p+0.5)*omega-delta)/PETSC_i-((q+0.5)*omega+delta)/PETSC_i+PETSC_i*delta_c*double(m-n)-kappa*double(m+n);
 			col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
@@ -356,7 +356,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	}
     	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
     	if (mt <= N && nt <= N) {
-    		_val_ = kappa*2*sqrt(m+1)*sqrt(n+1);
+    		_val_ = kappa*2.0*sqrt(m+1)*sqrt(n+1);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n; pt = p; qt = q;
@@ -382,13 +382,13 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	// S5 block
     	ct = 0;mt = m-1; nt = n; pt = p; qt = q;
     	if (mt >= 0) {
-    		_val_ = Omega/2*sqrt(m)/PETSC_i;
+    		_val_ = Omega/2.0*sqrt(m)/PETSC_i;
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	// S6 block
     	ct = 3;mt = m; nt = n+1; pt = p; qt = q;
     	if (nt <= N) {
-    		_val_ = -Omega/2*sqrt(n+1)/PETSC_i;
+    		_val_ = -Omega/2.0*sqrt(n+1)/PETSC_i;
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
         if (nonzeros > __MAXNOZEROS__){
@@ -400,7 +400,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     case 3:
     	// MDD block
     	ct = r; mt = m; nt = n; pt = p; qt = q;
-			_val_ = ((p+0.5)*omega-delta)/PETSC_i-((q+0.5)*omega-delta)/PETSC_i+PETSC_i*delta_c*(m-n)-kappa*(m+n);
+			_val_ = ((p+0.5)*omega-delta)/PETSC_i-((q+0.5)*omega-delta)/PETSC_i+PETSC_i*delta_c*double(m-n)-kappa*double(m+n);
 			col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
@@ -424,7 +424,7 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	}
     	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
     	if (mt <= N && nt <= N) {
-    		_val_ = kappa*2*sqrt(m+1)*sqrt(n+1);
+    		_val_ = kappa*2.0*sqrt(m+1)*sqrt(n+1);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n; pt = p; qt = q;
@@ -450,13 +450,13 @@ PetscErrorCode cMasterMatrix::assemblance(){
     	// S7 block
     	ct = 1;mt = m-1; nt = n; pt = p; qt = q;
     	if (mt >= 0) {
-    		_val_ = Omega/2*sqrt(m)/PETSC_i;
+    		_val_ = Omega/2.0*sqrt(m)/PETSC_i;
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	// S8 block
     	ct = 2;mt = m; nt = n-1; pt = p; qt = q;
     	if (nt >= 0) {
-    		_val_ = -Omega/2*sqrt(n)/PETSC_i;
+    		_val_ = -Omega/2.0*sqrt(n)/PETSC_i;
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
         if (nonzeros > __MAXNOZEROS__){
