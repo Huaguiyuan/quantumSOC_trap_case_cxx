@@ -23,7 +23,7 @@ void cMasterMatrix::initialize(){
 	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
 	        omega = dummyvalue;    if (ig == 0) cout << dummyname << "=" << omega << endl;
 	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
-	        qr = dummyvalue*sqrt(omega);    if (ig == 0) cout << dummyname << "=" << qr << endl;
+	        qr = dummyvalue;    if (ig == 0) cout << dummyname << "=" << qr << endl;
 	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
 	        Omega = dummyvalue;    if (ig == 0) cout << dummyname << "=" << Omega << endl;
 	        fscanf(input,"%s %lf", dummyname, &dummyvalue);
@@ -197,22 +197,22 @@ PetscErrorCode cMasterMatrix::assemblance(){
 	col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
-	  _val_ = -qr/sqrt(2)*sqrt(p+1);
+	  _val_ = -qr*sqrt(omega)/sqrt(2)*sqrt(p+1);
 	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p-1; qt = q;
     	if (pt >= 0) {
-	  _val_ =qr/sqrt(2)*sqrt(p);
+	  _val_ =qr*sqrt(omega)/sqrt(2)*sqrt(p);
 	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q+1;
     	if (qt <= Q) {
-	  _val_ = -qr/sqrt(2)*sqrt(q+1);
+	  _val_ = -qr*sqrt(omega)/sqrt(2)*sqrt(q+1);
 	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q-1;
     	if (qt >= 0) {
-	  _val_ = qr/sqrt(2)*sqrt(q);
+	  _val_ = qr*sqrt(omega)/sqrt(2)*sqrt(q);
 	  col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
@@ -268,22 +268,22 @@ PetscErrorCode cMasterMatrix::assemblance(){
 			col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
-    		_val_ = -qr/sqrt(2)*sqrt(p+1);
+	  _val_ = -qr*sqrt(omega)/sqrt(2)*sqrt(p+1);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p-1; qt = q;
     	if (pt >= 0) {
-    		_val_ = qr/sqrt(2)*sqrt(p);
+	  _val_ = qr*sqrt(omega)/sqrt(2)*sqrt(p);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q+1;
     	if (qt <= Q) {
-    		_val_ = qr/sqrt(2)*sqrt(q+1);
+	  _val_ = qr*sqrt(omega)/sqrt(2)*sqrt(q+1);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q-1;
     	if (qt >= 0) {
-    		_val_ = -qr/sqrt(2)*sqrt(q);
+	  _val_ = -qr*sqrt(omega)/sqrt(2)*sqrt(q);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
@@ -336,22 +336,22 @@ PetscErrorCode cMasterMatrix::assemblance(){
 			col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
-    		_val_ = qr/sqrt(2)*sqrt(p+1);
+	  _val_ = qr*sqrt(omega)/sqrt(2)*sqrt(p+1);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p-1; qt = q;
     	if (pt >= 0) {
-    		_val_ = -qr/sqrt(2)*sqrt(p);
+	  _val_ = -qr*sqrt(omega)/sqrt(2)*sqrt(p);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q+1;
     	if (qt <= Q) {
-    		_val_ = -qr/sqrt(2)*sqrt(q+1);
+	  _val_ = -qr*sqrt(omega)/sqrt(2)*sqrt(q+1);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q-1;
     	if (qt >= 0) {
-    		_val_ =  qr/sqrt(2)*sqrt(q);
+	  _val_ =  qr*sqrt(omega)/sqrt(2)*sqrt(q);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
@@ -404,22 +404,22 @@ PetscErrorCode cMasterMatrix::assemblance(){
 			col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	ct = r; mt = m; nt = n; pt = p+1; qt = q;
     	if (pt <= Q) {
-    		_val_ = qr/sqrt(2)*sqrt(p+1);
+	  _val_ = qr*sqrt(omega)/sqrt(2)*sqrt(p+1);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p-1; qt = q;
     	if (pt >= 0) {
-    		_val_ = -qr/sqrt(2)*sqrt(p);
+	  _val_ = -qr*sqrt(omega)/sqrt(2)*sqrt(p);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q+1;
     	if (qt <= Q) {
-    		_val_ = qr/sqrt(2)*sqrt(q+1);
+	  _val_ = qr*sqrt(omega)/sqrt(2)*sqrt(q+1);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m; nt = n; pt = p; qt = q-1;
     	if (qt >= 0) {
-    		_val_ = -qr/sqrt(2)*sqrt(q);
+	  _val_ = -qr*sqrt(omega)/sqrt(2)*sqrt(q);
     		col[nonzeros] = ct*tDIM1+mt*tDIM2+nt*tDIM3+pt*tDIM4+qt;value[nonzeros] = _val_;nonzeros ++;
     	}
     	ct = r; mt = m+1; nt = n+1; pt = p; qt = q;
