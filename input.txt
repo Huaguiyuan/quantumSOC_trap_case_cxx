@@ -1,11 +1,11 @@
-N		3
-Q		5
-omega		1
-qr		0.22
-Omega		1
+N		5
+Q		10
+omega		50
+qr		3.16227766017
+Omega 20
 delta		1
-varepsilon	1
+varepsilon	100
 delta_c		1
-kappa		1
+kappa		100
 tol		1.e-7
 
