@@ -13,6 +13,39 @@ void cMasterObservables::initialize(cMasterMatrix GMatrix){
 	size=GMatrix.size;
 }
 
+PetscErrorCode cMasterObservables::spin_density(cMasterMatrix GMatrix){
+  int nonzeros = 0;double phtn_n_r, phtn_fluc_r, tmpdiagrho;
+  cout.precision(16);
+  phtn_n_r = 0;phtn_fluc_r = 0;tmpdiagrho = 0;
+  PetscScalar value0;
+  for (ROW=rstart;ROW<rend;ROW++){
+    GMatrix.block(ROW, r, m, n, p, q);
+    if (r==0){ // Getting diagonal elements of rho_up_up and rho_dn_dn for all photon and orbital numbers              
+      if (m==n && p==q){
+	ierr = VecGetValues(GMatrix.x,1,&ROW,&value0);CHKERRQ(ierr);
+	phtn_n_r += PetscRealPart(value0);
+	nonzeros++;
+      }
+    }
+    if (r==3){ // Getting diagonal elements of rho_up_up and rho_dn_dn for all photon and orbital numbers                                  
+      if (m==n && p==q){
+        ierr = VecGetValues(GMatrix.x,1,&ROW,&value0);CHKERRQ(ierr);
+        phtn_fluc_r += PetscRealPart(value0);
+        nonzeros++;
+      }
+    }
+  }
+  MPI_Reduce(&phtn_n_r, &PhotonNumber, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+  MPI_Reduce(&phtn_fluc_r, &PhotonFluc, 1, MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+  if (rank == 0) {
+    cout << "spin up is " << PhotonNumber  << endl;
+    cout << "spin down is " << PhotonFluc << endl;
+  }
+  return ierr;
+}
+
+
+
 PetscErrorCode cMasterObservables::photon(cMasterMatrix GMatrix){
 	int nonzeros = 0;double phtn_n_r, phtn_fluc_r, tmpdiagrho;
 	cout.precision(16);

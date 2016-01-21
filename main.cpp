@@ -54,6 +54,7 @@ int main(int argc,char **args){
   DensityOps.ReshapeRho(GMatrix);
   DensityOps.negativity();
   DensityOps.checkODT(GMatrix);
+  DensityOps.spin_density(GMatrix);
   /*
      Always call PetscFinalize() before exiting a program.  This routine
        - finalizes the PETSc libraries as well as MPI

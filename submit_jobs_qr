@@ -1,0 +1,17 @@
+#!/bin/bash
+#Qa=$(awk 'BEGIN{for(i=4.5;i<=5.5;i+=0.05)print i})'
+#Qa=$(awk 'BEGIN{for(i=0.1;i<=2;i+=0.1)print i}')
+Qa=$(awk 'BEGIN{for(i=0.5;i<=6.5;i+=0.5)print i}')
+for var in $Qa
+do
+    mkdir Omega0.1_qr_$var
+    cd Omega0.1_qr_$var
+    cp ../jobs_script .
+    cp ../input.txt .
+    ln -s ../SteadyState .
+    sed -i '4s/.*/qr '$var'/' input.txt
+    cat input.txt
+    cat jobs_script
+    sbatch -A TG-PHY150032  jobs_script
+    cd ..
+done

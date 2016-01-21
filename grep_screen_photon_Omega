@@ -1,0 +1,24 @@
+#!/bin/bash
+rm *.data
+fn=/work/02946/ld7/tmp/quantumSOC_trap_case_cxx/
+#Earray=$(awk 'BEGIN{for(i=0.2;i<11;i+=0.2)print i}')
+#Earray=$(awk 'BEGIN{for(i=0.2;i<3.2;i+=0.2)print i}')
+Earray=$(awk 'BEGIN{for(i=0;i<151;i+=10)print i}')  
+#Earray=$(awk 'BEGIN{for(i=0;i<11;i+=2)print i}')  
+para=newqr3.162277_N10Q15_Omega
+for varepsilon in $Earray
+do
+    cd $para$varepsilon
+    echo $para$varepsilon
+    grep "photon number" tbdg_tunableSOC* | awk '{ print $4 }' >> $fn/photon_number_Omega.data
+    grep "photon number" tbdg_tunableSOC* | awk '{ print $9 }' >> $fn/photon_number_fluctuation_Omega.data
+    grep "orbital number" tbdg_tunableSOC* | awk '{ print $4 }' >> $fn/orbital_number_Omega.data
+    grep "orbital number" tbdg_tunableSOC* | awk '{ print $9 }' >> $fn/orbital_number_fluctuation_Omega.data
+    grep "negativity" tbdg_tunableSOC* | awk '{ print $3 }' >> $fn/negativity_Omega.data
+    grep "q value is 15" tbdg_tunableSOC* | awk '{ print $9 }' >> $fn/maxQ_Omega.data
+    grep "n value is 10" tbdg_tunableSOC* | awk '{ print $9 }' >> $fn/maxN_Omega.data
+    grep "spin up is " tbdg_tunableSOC* | awk '{ print $4 }' >> $fn/spin_up_Omega.data
+    grep "spin down is " tbdg_tunableSOC* | awk '{ print $4 }' >> $fn/spin_down_Omega.data
+    cd ..
+done
+

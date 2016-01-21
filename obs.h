@@ -33,5 +33,6 @@ public:
 	PetscErrorCode oscillator(cMasterMatrix);
 	PetscErrorCode negativity();
 	PetscErrorCode checkODT(cMasterMatrix);
+	PetscErrorCode spin_density(cMasterMatrix);
 };
 #endif

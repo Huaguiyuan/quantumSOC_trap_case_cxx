@@ -1,0 +1,25 @@
+#!/bin/bash
+#Qa=$(awk 'BEGIN{for(i=2;i<9;i+=2)print i}')
+#Qa=$(awk 'BEGIN{for(i=0.2;i<3.2;i+=0.2)print i}')
+qr=3.162277
+fn=qr$qr
+sed -i '6s/.*/delta 1/' input.txt
+sed -i '1s/.*/N 10/' input.txt
+sed -i '2s/.*/Q 15/' input.txt
+sed -i '4s/.*/qr '$qr'/' input.txt
+Qa=$(awk 'BEGIN{for(i=0;i<151;i+=10)print i}')
+for var in $Qa
+do
+    mkdir delta1_$var
+    cd delta1_$var
+    echo $PWD
+    cp ../jobs_script .
+    cp ../input.txt .
+    ln -s ../SteadyState .
+    sed -i '5s/.*/Omega '$var'/' input.txt
+    #sed -i '2s/.*/Q '$var'/' input.txt     
+    cat input.txt
+    cat jobs_script
+    sbatch -A TG-PHY150032 jobs_script
+    cd ..
+done

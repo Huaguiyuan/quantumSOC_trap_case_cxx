@@ -1,0 +1,26 @@
+#!/bin/bash
+Qa=$(awk 'BEGIN{for(i=10;i<21;i+=1)print i}')
+#Qa=$(awk 'BEGIN{for(i=0.2;i<3.2;i+=0.2)print i}')
+qr=3.162277
+fn=qr${qr}_N10Q
+sed -i '1s/.*/N 10/' input.txt
+#sed -i '2s/.*/Q 15/' input.txt
+sed -i '5s/.*/Omega 1/' input.txt
+sed -i '4s/.*/qr '$qr'/' input.txt
+filename=${fn}
+#Qa=$(awk 'BEGIN{for(i=0;i<151;i+=10)print i}')
+for var in $Qa
+do
+    mkdir ${filename}$var
+    cd ${filename}$var
+    echo ${filename}$var
+    cp ../jobs_script .
+    cp ../input.txt .
+    ln -s ../SteadyState .
+#    sed -i '5s/.*/Omega '$var'/' input.txt
+    sed -i '2s/.*/Q '$var'/' input.txt     
+    cat input.txt
+    cat jobs_script
+    sbatch -A TG-PHY150032 jobs_script
+    cd ..
+done
